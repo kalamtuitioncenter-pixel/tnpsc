@@ -859,7 +859,7 @@ function finishTest(auto){
 
 /* ---------- AI providers: the browser calls the provider directly with the student's own key ---------- */
 const PROV={
-  gemini:{name:'Google Gemini',model:'gemini-2.5-flash',hint:'Free key from aistudio.google.com/apikey'},
+  gemini:{name:'Google Gemini',model:'gemini-4-hydrogen',hint:'Free key from aistudio.google.com/apikey'},
   groq:{name:'Groq',model:'llama-3.3-70b-versatile',hint:'Free key from console.groq.com/keys'},
   openrouter:{name:'OpenRouter',model:'openrouter/free',hint:'Key from openrouter.ai/keys. Models whose name ends in :free cost nothing'},
   openai:{name:'OpenAI (ChatGPT)',model:'gpt-4o-mini',hint:'Paid key from platform.openai.com/api-keys'}
@@ -870,7 +870,8 @@ function aiLoad(){try{const j=JSON.parse(localStorage.getItem(AIK)||'null');if(j
 function aiSave(){try{localStorage.setItem(AIK,JSON.stringify(AI));}catch(e){}}
 const aiKey=()=>(AI.keys[AI.provider]||'').trim();
 const aiReady=()=>(AI.provider==='claude'&&!!CLAUDE)||!!aiKey();
-const aiModel=()=>(AI.models[AI.provider]||'').trim()||PROV[AI.provider].model;
+const GEM_FALLBACK=['gemini-4-hydrogen','gemini-3.8-flash','gemini-2.5-flash-lite'];
+const aiModel=()=>((AI.models[AI.provider]||'').trim().replace(/^models\//,'').replace(/\s+/g,'-'))||PROV[AI.provider].model;
 
 function parseLoose(t){
   try{return JSON.parse(t);}catch(e){}
@@ -902,14 +903,21 @@ async function aiCall(input,opts){
     body={model:model,messages:turns};
     if(p==='openai')body.max_completion_tokens=4096;else{body.max_tokens=4096;body.temperature=0.3;}
   }
-  let res;
-  try{res=await fetch(url,{method:'POST',headers:headers,body:JSON.stringify(body),signal:signal});}
-  catch(e){
-    if((signal&&signal.aborted)||(e&&e.name==='AbortError'))throw {code:'cancelled',message:'Cancelled'};
-    throw {code:'network',message:'Network error'};
+  const tries=p==='gemini'?[model].concat(GEM_FALLBACK.filter(x=>x!==model)):[model];
+  let res,j=null;
+  for(let ti=0;ti<tries.length;ti++){
+    if(p==='gemini')url='https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(tries[ti])+':generateContent';
+    try{res=await fetch(url,{method:'POST',headers:headers,body:JSON.stringify(body),signal:signal});}
+    catch(e){
+      if((signal&&signal.aborted)||(e&&e.name==='AbortError'))throw {code:'cancelled',message:'Cancelled'};
+      throw {code:'network',message:'Network error'};
+    }
+    j=null;
+    try{j=await res.json();}catch(e){}
+    if(res.ok)break;
+    const m0=String((j&&j.error&&(j.error.message||j.error))||'');
+    if(!(p==='gemini'&&ti<tries.length-1&&/no longer available|not found|not supported|unexpected model|deprecated/i.test(m0)))break;
   }
-  let j=null;
-  try{j=await res.json();}catch(e){}
   if(!res.ok){
     const em=j&&j.error;
     const msg=String(em&&(em.message||em)||'');
