@@ -1,0 +1,1715 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>TNPSC Study Desk</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400..700&family=Noto+Sans+Tamil:wght@400..700&display=swap">
+<style>
+/* Layout: sticky header with section tabs (bottom bar on phones). OMR-sheet motif: filled bubbles for answers, status and the logo. */
+:root{
+  --bg:#F2F4F9; --surface:#FFFFFF; --surface-2:#E9EDF6; --ink:#131A2E; --muted:#586278; --line:#D6DCE8;
+  --accent:#2438D4; --on-accent:#FFFFFF; --accent-soft:#E4E8FC;
+  --ok:#17794D; --ok-soft:#DDF2E7; --warn:#9A5B0A; --warn-soft:#FBEFD9; --bad:#B83225; --bad-soft:#FBE3E0;
+  --font-display:"Bricolage Grotesque","Noto Sans Tamil",system-ui,sans-serif;
+  --font-body:"Manrope","Noto Sans Tamil",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --radius:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1222; --surface:#151B30; --surface-2:#1E2644; --ink:#E9EDFA; --muted:#9AA4BF; --line:#2B3555;
+    --accent:#8B9BFF; --on-accent:#0D1222; --accent-soft:#222C57;
+    --ok:#4CC38A; --ok-soft:#173528; --warn:#E3AE55; --warn-soft:#3A2D14; --bad:#FF8A7D; --bad-soft:#40201E;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1222; --surface:#151B30; --surface-2:#1E2644; --ink:#E9EDFA; --muted:#9AA4BF; --line:#2B3555;
+  --accent:#8B9BFF; --on-accent:#0D1222; --accent-soft:#222C57;
+  --ok:#4CC38A; --ok-soft:#173528; --warn:#E3AE55; --warn-soft:#3A2D14; --bad:#FF8A7D; --bad-soft:#40201E;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+[hidden]{display:none!important}
+body{margin:0}
+body{
+  font-family:var(--font-body);font-size:15px;line-height:1.55;background:var(--bg);color:var(--ink);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0 112px;
+}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:30}
+body.in-test{padding-block:0 40px}
+p{margin:0}
+h1{font:700 28px/1.15 var(--font-display);letter-spacing:-.01em;margin:0;text-wrap:balance}
+h2{font:700 18px/1.25 var(--font-display);margin:0 0 10px;text-wrap:balance}
+button,select,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto}
+.muted{color:var(--muted)}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.eyebrow{font:500 11px var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.sp{flex:1}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.head{display:grid;gap:6px;margin-bottom:18px}
+.stack{display:grid;gap:16px}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;min-width:0}
+main{padding-block:18px 8px}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);padding-top:10px}
+.top-row{display:flex;justify-content:space-between;align-items:center;gap:8px 12px;flex-wrap:wrap;min-height:44px}
+.brand{display:inline-flex;align-items:center;gap:10px;font:700 17px var(--font-display);color:var(--ink);text-decoration:none}
+.omr{display:inline-flex;gap:3px}
+.omr i{width:10px;height:10px;border:1.5px solid var(--ink);border-radius:50%}
+.omr i.on{background:var(--ink)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13px;color:var(--ink);text-decoration:none;white-space:nowrap}
+.chip.pick{cursor:pointer}
+.chip.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.chip b{font-family:var(--font-mono);font-weight:500;opacity:.8}
+.pulse{width:8px;height:8px;border-radius:50%;background:var(--bad);animation:pl 1.4s ease-in-out infinite}
+@keyframes pl{50%{opacity:.25}}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:25;display:grid;grid-template-columns:repeat(6,1fr);background:var(--surface);border-top:1px solid var(--line);padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+.tab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;color:var(--muted);text-decoration:none;font-size:11px;font-weight:600;border-radius:10px}
+.tab svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tab[aria-current="page"]{color:var(--accent)}
+body.in-test .tabs{display:none}
+@media (min-width:820px){
+  body{padding-block:0 56px}
+  .tabs{position:static;display:flex;gap:6px;border:0;background:transparent;padding:0;margin-top:8px}
+  .tab{flex-direction:row;gap:8px;padding:8px 16px;font-size:14px;border-radius:999px}
+  .tab[aria-current="page"]{background:var(--accent);color:var(--on-accent)}
+}
+
+/* controls */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:0 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600;cursor:pointer;text-decoration:none}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.sm{min-height:34px;padding:0 12px;font-size:13px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.link{background:none;border:0;padding:0 2px;min-height:30px;color:var(--accent);font-weight:600;font-size:13px;cursor:pointer}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.seg button{min-height:38px;padding:0 14px;border:0;background:transparent;cursor:pointer;font-weight:600;font-size:13px;color:var(--muted)}
+.seg button.on{background:var(--accent-soft);color:var(--accent)}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+.field{display:grid;gap:6px;min-width:0}
+.field>span{font-size:13px;font-weight:600;color:var(--muted)}
+input,select,textarea{width:100%;min-height:42px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
+input[type=checkbox]{width:18px;height:18px;min-height:0;accent-color:var(--accent)}
+textarea{resize:vertical;min-height:64px}
+.form{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr))}
+.check{display:flex;gap:10px;align-items:center;font-size:14px}
+
+/* progress */
+.ring{width:132px;height:132px;flex:none}
+.ring-bg{fill:none;stroke:var(--surface-2);stroke-width:10}
+.ring-fg{fill:none;stroke:var(--accent);stroke-width:10;stroke-linecap:round}
+.ring-n{font:700 28px var(--font-display);fill:var(--ink)}
+.ring-s{font:500 9px var(--font-mono);fill:var(--muted);letter-spacing:.08em}
+.cov{gap:20px;flex-wrap:nowrap}
+.kv{display:grid;gap:4px;min-width:0}
+.kv b{font:700 20px var(--font-display)}
+.bar{display:flex;height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.bar .s3{opacity:1}.bar .s2{opacity:.62}.bar .s1{opacity:.32}
+.big{font:700 40px/1 var(--font-display);letter-spacing:-.02em}
+.subrow{display:grid;gap:6px;width:100%;padding:10px 0;border:0;border-top:1px solid var(--line);background:none;text-align:left;cursor:pointer;color:inherit}
+.subrow:first-of-type{border-top:0}
+.subrow.static{cursor:default}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent);margin-right:6px;vertical-align:-1px}
+.legend .l2 i{opacity:.62}.legend .l1 i{opacity:.32}
+.chart{width:100%;height:auto;display:block}
+.q{white-space:pre-line}
+.qc{padding:16px 0;border-top:1px solid var(--line);display:grid;gap:10px}
+.qc:first-child{border-top:0}
+.meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.qc .opt{padding:8px 12px}
+.jsonbox{font-family:var(--font-mono);font-size:12px}
+.pager{display:flex;gap:12px;align-items:center;justify-content:center;margin-top:14px}
+.edit-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))}
+.chart .gl{stroke:var(--line);stroke-width:1}
+.chart .ax{font:500 10px var(--font-mono);fill:var(--muted)}
+.chart .bar{fill:var(--accent);opacity:.4}
+.chart .bar.on{opacity:1}
+.chart .goal{stroke:var(--warn);stroke-width:1.5;stroke-dasharray:4 4}
+.chart .ln{fill:none;stroke:var(--accent);stroke-width:2}
+.chart .pt{fill:var(--surface);stroke:var(--accent);stroke-width:2}
+.chart .pt.on{fill:var(--accent)}
+.note{font-size:12px;color:var(--muted);margin-top:8px}
+.li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:10px 0;border-top:1px solid var(--line);align-items:center}
+.li:first-of-type{border-top:0}
+.li .ti{font-weight:600}
+.li .su{color:var(--muted);font-size:13px}
+
+/* syllabus */
+.dot{display:inline-block;width:16px;height:16px;border-radius:50%;border:1.5px solid var(--muted);flex:none;background:conic-gradient(var(--dc,var(--accent)) calc(var(--p,0)*1%),transparent 0)}
+.dot.s1{--p:34;border-color:var(--accent)}
+.dot.s2{--p:67;border-color:var(--accent)}
+.dot.s3{--p:100;--dc:var(--ok);border-color:var(--ok)}
+.stat{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap}
+.topic{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:12px 0;border-top:1px solid var(--line)}
+.topic:first-child{border-top:0}
+.topic .tn{font-weight:600}
+.topic .tt{color:var(--muted);font-size:13px}
+.topic .tools{grid-column:1/-1;display:flex;gap:16px}
+
+/* timer */
+.clock-wrap{position:relative;width:min(260px,72vw);margin:0 auto}
+.tring-bg{fill:none;stroke:var(--surface-2);stroke-width:10}
+.tring-fg{fill:none;stroke:var(--accent);stroke-width:10;stroke-linecap:round}
+.clock{position:absolute;inset:0;display:grid;place-content:center;text-align:center;gap:2px}
+#tm-clock{font:500 44px var(--font-mono);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+
+/* tests */
+.run{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:860px){.run{grid-template-columns:minmax(0,2fr) minmax(0,1fr);align-items:start}}
+.q{font:600 18px/1.55 var(--font-body);margin:10px 0 14px;overflow-wrap:anywhere}
+.opts{display:grid;gap:10px}
+.opt{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:inherit;cursor:pointer}
+div.opt{cursor:default}
+.opt .otxt{min-width:0;overflow-wrap:anywhere;padding-top:3px}
+.bub{flex:none;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--muted);display:grid;place-items:center;font:500 12px var(--font-mono)}
+.opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+.opt.sel .bub{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.opt.right .bub{background:var(--ok);color:var(--surface);border-color:var(--ok)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt.wrong .bub{background:var(--bad);color:var(--surface);border-color:var(--bad)}
+.qa{margin-top:16px}
+.palette{display:grid;grid-template-columns:repeat(auto-fill,minmax(42px,1fr));gap:8px;margin-top:10px}
+.pal{aspect-ratio:1;max-width:100%;border:1.5px solid var(--muted);border-radius:50%;background:transparent;font:500 13px var(--font-mono);cursor:pointer}
+.pal.ans{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pal.mk{box-shadow:0 0 0 2px var(--warn)}
+.pal.cur{outline:2px solid var(--accent);outline-offset:2px}
+.confirm{margin-top:14px;padding:12px;border-radius:10px;background:var(--warn-soft);display:grid;gap:10px}
+.rev{padding:16px 0;border-top:1px solid var(--line);display:grid;gap:8px}
+.rev:first-child{border-top:0}
+.rev .q{font-size:16px;margin:2px 0 4px}
+.tag{font-size:12px;font-weight:700;padding:2px 10px;border-radius:99px}
+.tag.right{background:var(--ok-soft);color:var(--ok)}
+.tag.wrong{background:var(--bad-soft);color:var(--bad)}
+.tag.skip{background:var(--surface-2);color:var(--muted)}
+.exp{font-size:14px;color:var(--muted)}
+.exp b{color:var(--ink)}
+.err{padding:12px;border-radius:10px;background:var(--bad-soft);color:var(--bad);font-size:14px}
+.spin{width:20px;height:20px;border:2.5px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite;flex:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* chat */
+.chatlog{height:min(56vh,520px);min-height:260px;overflow-y:auto;display:grid;align-content:start;gap:12px;padding:2px}
+.msg{max-width:94%;min-width:0}
+.msg.me{justify-self:end}
+.msg.me .bt{background:var(--accent);color:var(--on-accent);border-radius:14px 14px 4px 14px;padding:10px 14px;overflow-wrap:anywhere}
+.msg.bot .md{background:var(--surface-2);border-radius:14px 14px 14px 4px;padding:10px 14px;overflow-wrap:anywhere}
+.md p+p,.md ul+p,.md p+ul{margin-top:8px}
+.md ul{margin:0;padding-left:20px}
+.md code{font-family:var(--font-mono);font-size:.9em}
+.errnote{font-size:13px;color:var(--bad);margin-top:6px}
+.composer{display:grid;gap:10px;grid-template-columns:minmax(0,1fr) auto;align-items:end;margin-top:12px}
+.empty{display:grid;gap:10px;justify-items:start}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:40;max-width:calc(100% - 32px);opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion: reduce){.pulse,.spin{animation:none}.toast{transition:none}}
+</style>
+</head>
+<body>
+<header id="top" class="top"></header>
+<main id="view" class="wrap"></main>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- helpers ---------- */
+const $=(s,r)=>(r||document).querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function dkey(d){d=d||new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+function fmtClock(sec){sec=Math.max(0,Math.round(sec));const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;return (h?h+':'+pad(m):pad(m))+':'+pad(s);}
+function fmtDur(sec){sec=Math.round(sec);const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);return h?h+'h '+pad(m)+'m':m+'m';}
+function daysToExam(){if(!P.examDate)return null;const t=new Date(P.examDate+'T00:00:00');if(isNaN(t))return null;const n=new Date();n.setHours(0,0,0,0);return Math.round((t-n)/86400000);}
+function greet(){const h=new Date().getHours();return 'வணக்கம் · '+(h<12?'Good morning':h<17?'Good afternoon':'Good evening');}
+let toastT=0;
+function toast(m){const t=$('#toast');if(!t)return;t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600);}
+
+/* ---------- syllabus ---------- */
+const SUBJECTS=[
+{id:'tam',en:'General Tamil',ta:'பொதுத் தமிழ்',t:[
+ ['tam1','Grammar: letters & words','இலக்கணம்: எழுத்து, சொல்'],
+ ['tam2','Grammar: meaning, prosody & figures of speech','பொருள், யாப்பு, அணி'],
+ ['tam3','Spelling & correct usage','பிழை திருத்தம்'],
+ ['tam4','Synonyms, antonyms & idioms','ஒருபொருள், எதிர்ச்சொல், மரபுத்தொடர்'],
+ ['tam5','Sangam literature','சங்க இலக்கியம்'],
+ ['tam6','Thirukkural & Pathinenkilkanakku','திருக்குறள், பதினெண்கீழ்க்கணக்கு'],
+ ['tam7','Epics & Bhakti literature','காப்பியங்கள், பக்தி இலக்கியம்'],
+ ['tam8','Modern literature & poets','நவீன இலக்கியம்'],
+ ['tam9','Tamil scholars & their works','தமிழறிஞர்களும் நூல்களும்']]},
+{id:'sci',en:'General Science',ta:'அறிவியல்',t:[
+ ['sci1','Physics basics','இயற்பியல்'],
+ ['sci2','Chemistry basics','வேதியியல்'],
+ ['sci3','Botany','தாவரவியல்'],
+ ['sci4','Zoology','விலங்கியல்'],
+ ['sci5','Human body, nutrition & health','மனித உடல், ஊட்டச்சத்து, நலம்'],
+ ['sci6','Science & technology developments','அறிவியல் தொழில்நுட்ப வளர்ச்சி']]},
+{id:'geo',en:'Geography',ta:'புவியியல்',t:[
+ ['geo1','Earth, universe & oceans','புவி, அண்டம், கடல்'],
+ ['geo2','India: rivers, mountains & landforms','இந்தியா: ஆறுகள், மலைகள்'],
+ ['geo3','Climate, soils & natural resources','காலநிலை, மண், வளங்கள்'],
+ ['geo4','Tamil Nadu geography','தமிழ்நாடு புவியியல்'],
+ ['geo5','Agriculture, industry & transport','வேளாண்மை, தொழில், போக்குவரத்து'],
+ ['geo6','Environment & disaster management','சுற்றுச்சூழல், பேரிடர் மேலாண்மை']]},
+{id:'his',en:'History of India',ta:'இந்திய வரலாறு',t:[
+ ['his1','Ancient India','பண்டைய இந்தியா'],
+ ['his2','Medieval India','இடைக்கால இந்தியா'],
+ ['his3','British rule & revolts','ஆங்கிலேயர் ஆட்சி, கிளர்ச்சிகள்'],
+ ['his4','Indian National Movement','இந்திய தேசிய இயக்கம்'],
+ ['his5','Indian culture, art & heritage','இந்தியப் பண்பாடு, கலை']]},
+{id:'tnh',en:'Tamil Nadu History & Culture',ta:'தமிழ்நாடு வரலாறு, பண்பாடு',t:[
+ ['tnh1','Tamil Nadu: ancient to Nayak period','சங்ககாலம் முதல் நாயக்கர் வரை'],
+ ['tnh2','Social reform & Self-Respect Movement','சமூக சீர்திருத்தம், சுயமரியாதை இயக்கம்'],
+ ['tnh3','Freedom struggle in Tamil Nadu','தமிழ்நாட்டில் விடுதலைப் போராட்டம்'],
+ ['tnh4','Tamil Nadu culture, arts & heritage','தமிழ்நாட்டுப் பண்பாடு, கலைகள்']]},
+{id:'pol',en:'Indian Polity',ta:'இந்திய அரசியலமைப்பு',t:[
+ ['pol1','Constitution: making & Preamble','அரசியலமைப்பு உருவாக்கம், முகவுரை'],
+ ['pol2','Fundamental Rights, DPSP & Duties','அடிப்படை உரிமைகள், கடமைகள்'],
+ ['pol3','Union & State government','மத்திய, மாநில அரசுகள்'],
+ ['pol4','Panchayati Raj & local bodies','ஊராட்சி, உள்ளாட்சி அமைப்புகள்'],
+ ['pol5','Constitutional bodies','அரசியலமைப்பு அமைப்புகள்'],
+ ['pol6','Amendments, emergency & Centre-State relations','திருத்தங்கள், நெருக்கடிநிலை, மத்திய-மாநில உறவு']]},
+{id:'eco',en:'Indian Economy',ta:'இந்தியப் பொருளாதாரம்',t:[
+ ['eco1','National income & basic concepts','தேசிய வருமானம், அடிப்படைகள்'],
+ ['eco2','Planning & NITI Aayog','திட்டமிடல், நிதி ஆயோக்'],
+ ['eco3','Banking, RBI & inflation','வங்கி, ரிசர்வ் வங்கி, பணவீக்கம்'],
+ ['eco4','Budget, taxation & GST','வரவு செலவு, வரிகள்'],
+ ['eco5','Poverty, employment & welfare','வறுமை, வேலைவாய்ப்பு'],
+ ['eco6','Tamil Nadu economy','தமிழ்நாட்டுப் பொருளாதாரம்']]},
+{id:'dev',en:'Development Administration',ta:'வளர்ச்சி நிர்வாகம்',t:[
+ ['dev1','Welfare schemes of Tamil Nadu','தமிழ்நாட்டு நலத்திட்டங்கள்'],
+ ['dev2','Health, education & social indicators','சுகாதாரம், கல்வி, சமூகக் குறியீடுகள்'],
+ ['dev3','e-Governance, RTI & administration','மின்னாளுமை, தகவல் உரிமைச் சட்டம்']]},
+{id:'cur',en:'Current Affairs',ta:'நடப்பு நிகழ்வுகள்',t:[
+ ['cur1','National & international affairs','நடப்பு நிகழ்வுகள்'],
+ ['cur2','Tamil Nadu current affairs','தமிழ்நாடு நடப்பு நிகழ்வுகள்'],
+ ['cur3','Awards, sports & appointments','விருதுகள், விளையாட்டு, நியமனங்கள்']]},
+{id:'apt',en:'Aptitude & Mental Ability',ta:'திறனறிவு',t:[
+ ['apt1','Simplification & number system','எளிமையாக்கல், எண்கள்'],
+ ['apt2','Percentage, profit & loss','சதவீதம், இலாபம், நட்டம்'],
+ ['apt3','Ratio, proportion & average','விகிதம், சராசரி'],
+ ['apt4','Simple & compound interest','தனி வட்டி, கூட்டு வட்டி'],
+ ['apt5','Time & work, speed & distance','காலம், வேலை, வேகம், தூரம்'],
+ ['apt6','HCF, LCM & squares','மீ.பொ.வ, மீ.பொ.ம'],
+ ['apt7','Mensuration','அளவியல்'],
+ ['apt8','Series, coding & analogy','தொடர்கள், குறியீடு, ஒப்புமை'],
+ ['apt9','Directions, blood relations & puzzles','திசை, இரத்த உறவு, புதிர்']]}
+];
+const SUB={},TOPIC={};
+SUBJECTS.forEach(s=>{SUB[s.id]=s;s.t.forEach(t=>{TOPIC[t[0]]={id:t[0],en:t[1],ta:t[2],sub:s.id};});});
+const ST=['Not started','Studied','Revised','Mastered'];
+
+/* ---------- built-in starter question bank: [topic, question, options, correct index, explanation] ---------- */
+const BANK=[
+['apt1','15 + 5 × 4 − 6 ÷ 2 = ?',['29','32','35','38'],1,'Apply BODMAS: 5 × 4 = 20 and 6 ÷ 2 = 3, so 15 + 20 − 3 = 32.'],
+['apt2','A number increased by 20% becomes 180. What is the number?',['140','144','150','160'],2,'120% of the number is 180, so the number is 180 ÷ 1.2 = 150.'],
+['apt2','An article bought for ₹800 is sold for ₹920. What is the profit percentage?',['12%','15%','18%','20%'],1,'Profit is ₹120, and 120 ÷ 800 × 100 = 15%.'],
+['apt3','Divide ₹1,200 in the ratio 3 : 2. What is the larger share?',['₹480','₹600','₹720','₹800'],2,'Total parts = 5, one part = ₹240, so the larger share is 3 × 240 = ₹720.'],
+['apt3','The average of 5 numbers is 24. If the number 18 is removed, what is the average of the remaining four?',['24','25','25.5','26'],2,'Total = 120. After removing 18 the total is 102, and 102 ÷ 4 = 25.5.'],
+['apt4','Simple interest on ₹5,000 at 8% per annum for 3 years is',['₹1,000','₹1,200','₹1,400','₹1,500'],1,'SI = P × R × T ÷ 100 = 5000 × 8 × 3 ÷ 100 = ₹1,200.'],
+['apt4','Compound interest on ₹10,000 at 10% per annum for 2 years is',['₹2,000','₹2,050','₹2,100','₹2,200'],2,'Amount = 10000 × 1.1 × 1.1 = 12,100, so the compound interest is ₹2,100.'],
+['apt5','A can finish a job in 12 days and B in 24 days. Working together, how many days will they take?',['6','8','9','10'],1,'Combined rate = 1/12 + 1/24 = 3/24 = 1/8 per day, so 8 days.'],
+['apt5','A 150 m long train crosses a pole in 10 seconds. Its speed in km/h is',['45','54','60','72'],1,'Speed = 150 ÷ 10 = 15 m/s. Multiply by 18/5 to get 54 km/h.'],
+['apt6','What are the HCF and LCM of 12 and 18?',['3 and 36','6 and 36','6 and 72','9 and 36'],1,'12 = 2² × 3 and 18 = 2 × 3². HCF = 2 × 3 = 6 and LCM = 2² × 3² = 36.'],
+['apt7','The area of a circle of radius 7 cm (π = 22/7) is',['44 cm²','144 cm²','154 cm²','308 cm²'],2,'Area = πr² = 22/7 × 7 × 7 = 154 cm².'],
+['apt8','Find the next number: 2, 6, 12, 20, 30, ?',['36','40','42','44'],2,'The terms are n × (n + 1): 1×2, 2×3, 3×4, 4×5, 5×6. The next is 6 × 7 = 42.'],
+['apt8','If CAT is coded as DBU, how is DOG coded?',['EPH','ENH','EPG','FPH'],0,'Each letter moves one place forward: D to E, O to P, G to H.'],
+['apt9','You face east and turn right, then turn right again. Which direction do you face now?',['North','South','East','West'],3,'East, then a right turn gives South, and another right turn gives West.'],
+['apt9','Pointing to a man, Ravi said, "He is the son of my mother\'s only brother." How is the man related to Ravi?',['Uncle','Brother','Cousin','Nephew'],2,'Ravi\'s mother\'s brother is his maternal uncle, and that uncle\'s son is Ravi\'s cousin.'],
+['sci1','The SI unit of force is',['Joule','Newton','Pascal','Watt'],1,'Force is measured in newtons. Joule is energy, pascal is pressure and watt is power.'],
+['sci1','The speed of light in a vacuum is approximately',['3 × 10⁶ m/s','3 × 10⁸ m/s','3 × 10¹⁰ m/s','3 × 10⁵ m/s'],1,'Light travels at about 3 × 10⁸ metres per second in a vacuum.'],
+['sci2','The pH of pure water at 25 °C is',['0','5','7','14'],2,'Pure water is neutral, so its pH is 7.'],
+['sci3','Which tissue carries water from the roots to the leaves in plants?',['Phloem','Xylem','Cambium','Epidermis'],1,'Xylem carries water and minerals upward. Phloem carries prepared food.'],
+['sci5','A deficiency of vitamin C causes',['Rickets','Scurvy','Beriberi','Night blindness'],1,'Scurvy is caused by a lack of vitamin C. Rickets is linked to vitamin D, beriberi to B1 and night blindness to vitamin A.'],
+['sci5','Which blood group is called the universal donor?',['AB positive','O negative','A positive','B negative'],1,'O negative red cells carry no A, B or Rh antigens, so they can be given to any recipient.'],
+['pol1','Who chaired the Drafting Committee of the Indian Constitution?',['Dr. Rajendra Prasad','Dr. B. R. Ambedkar','Jawaharlal Nehru','Sardar Vallabhbhai Patel'],1,'Dr. B. R. Ambedkar chaired the Drafting Committee. Dr. Rajendra Prasad presided over the Constituent Assembly.'],
+['pol2','Article 21A guarantees free and compulsory education to children in the age group',['3–14 years','6–14 years','6–18 years','5–15 years'],1,'The 86th Amendment (2002) added Article 21A for children aged 6 to 14.'],
+['pol3','The President of India is elected by',['Lok Sabha members only','Elected members of Parliament and State Legislative Assemblies','Direct vote of the people','Rajya Sabha members only'],1,'An electoral college of the elected members of both Houses of Parliament and the State Legislative Assemblies elects the President.'],
+['pol5','The Election Commission of India is',['A statutory body','A constitutional body','An advisory body','A private body'],1,'Article 324 of the Constitution establishes the Election Commission.'],
+['his1','Which Mauryan emperor adopted Buddhism after the Kalinga War?',['Chandragupta Maurya','Bindusara','Ashoka','Brihadratha'],2,'Ashoka turned to Buddhism after the bloodshed of the Kalinga War, around 261 BCE.'],
+['his4','The Quit India Movement was launched in',['1930','1940','1942','1946'],2,'Gandhi gave the "Do or Die" call at Bombay in August 1942.'],
+['his4','The Dandi March (Salt Satyagraha) began in',['1919','1927','1930','1942'],2,'Gandhi began the march from Sabarmati Ashram on 12 March 1930.'],
+['geo2','The longest river of peninsular India is',['Kaveri','Krishna','Godavari','Mahanadi'],2,'The Godavari, at about 1,465 km, is the longest peninsular river.'],
+['geo4','The highest peak in Tamil Nadu is',['Anamudi','Doddabetta','Mullayanagiri','Mahendragiri'],1,'Doddabetta in the Nilgiris (about 2,637 m) is the highest peak in Tamil Nadu. Anamudi is in Kerala.'],
+['tnh1','Which Chola king built the Brihadisvara Temple at Thanjavur?',['Rajendra Chola I','Rajaraja Chola I','Kulothunga Chola I','Parantaka Chola I'],1,'Rajaraja Chola I completed the Peruvudaiyar (Brihadisvara) Temple around 1010 CE.'],
+['tnh2','Who started the Self-Respect Movement in 1925?',['E. V. Ramasamy (Periyar)','C. N. Annadurai','C. Rajagopalachari','Subramania Bharati'],0,'Periyar E. V. Ramasamy founded the Self-Respect Movement in 1925.'],
+['tnh3','Who is known as "Kappalottiya Thamizhan"?',['V. O. Chidambaram Pillai','Subramania Bharati','Tiruppur Kumaran','Subramania Siva'],0,'V. O. Chidambaram Pillai started the Swadeshi Steam Navigation Company at Thoothukudi in 1906.'],
+['eco3','The Reserve Bank of India was established in',['1935','1947','1949','1969'],0,'The RBI began work in 1935 and was nationalised in 1949.'],
+['tam6','திருக்குறளில் உள்ள அதிகாரங்களின் எண்ணிக்கை',['108','120','133','150'],2,'திருக்குறள் 133 அதிகாரங்களையும் 1330 குறள்களையும் கொண்டது.'],
+['tam8','‘பாஞ்சாலி சபதம்’ நூலின் ஆசிரியர்',['பாரதிதாசன்','சுப்பிரமணிய பாரதியார்','கண்ணதாசன்','வாணிதாசன்'],1,'பாஞ்சாலி சபதத்தை இயற்றியவர் மகாகவி சுப்பிரமணிய பாரதியார்.'],
+['tam9','‘தமிழ்த் தாத்தா’ என்று போற்றப்படுபவர்',['மறைமலை அடிகள்','உ. வே. சாமிநாதையர்','திரு. வி. கலியாணசுந்தரனார்','பாரதிதாசன்'],1,'சங்க இலக்கிய ஓலைச்சுவடிகளைத் தேடித் தொகுத்துப் பதிப்பித்த உ. வே. சாமிநாதையர் தமிழ்த் தாத்தா எனப்படுகிறார்.']
+];
+
+/* ---------- state & storage ---------- */
+const LSK='tnpsc-study-desk-v1'; // the same key every earlier version used, so existing progress is kept
+const DATA_VERSION=2;
+let P={topics:{},examDate:'',goal:120,lang:'tanglish'},LOG={},TESTS=[],QB=[],QS={},SEEDED=false;
+const store={db:null,base:'',mode:'local',dirty:new Set(),timer:0,busy:false,chunks:0,fail:0,lsErr:false};
+let SAMPLE=null,CLAUDE=null,sampleReady=false;
+const clone=x=>JSON.parse(JSON.stringify(x));
+function lsSave(){
+  try{localStorage.setItem(LSK,JSON.stringify({v:DATA_VERSION,seeded:SEEDED,P:P,LOG:LOG,TESTS:TESTS,QB:QB,QS:QS}));store.lsErr=false;}
+  catch(e){if(!store.lsErr)toast('This device is out of storage space. Export your question bank, then delete old questions.');store.lsErr=true;}
+}
+function lsLoad(){
+  let raw=null,j=null;
+  try{raw=localStorage.getItem(LSK);j=raw?JSON.parse(raw):null;}
+  catch(e){j=null;if(raw){try{localStorage.setItem(LSK+'-corrupt',raw);}catch(_){}}}
+  if(j){
+    // version 1 data (no "v" field) is copied once to a backup key before it is upgraded
+    if(!j.v){try{if(!localStorage.getItem(LSK+'-backup-v1'))localStorage.setItem(LSK+'-backup-v1',raw);}catch(e){}}
+    if(j.P)P=Object.assign(P,j.P);
+    if(!P.topics)P.topics={};
+    if(j.LOG)LOG=j.LOG;
+    if(Array.isArray(j.TESTS))TESTS=j.TESTS;
+    if(Array.isArray(j.QB))QB=j.QB.map(normQ).filter(Boolean);
+    if(j.QS&&typeof j.QS==='object')QS=j.QS;
+    SEEDED=!!j.seeded;
+  }
+  if(!SEEDED){seedBank();SEEDED=true;lsSave();}
+}
+function seedBank(){
+  const have=new Set(QB.map(q=>qKey(q.q)));
+  BANK.forEach((b,i)=>{
+    const q=normQ({id:'S'+String(i+1).padStart(3,'0'),t:b[0],q:b[1],o:b[2],a:b[3],e:b[4],d:'Medium',ty:'Practice',vs:'AI Generated',src:'Starter set written by Claude. Not checked against a textbook.'});
+    if(q&&!have.has(qKey(q.q)))QB.push(q);
+  });
+}
+function pruneLog(){const k=Object.keys(LOG).sort();while(k.length>120)delete LOG[k.shift()];}
+function payload(k){return k==='state'?{topics:P.topics,examDate:P.examDate||'',goal:P.goal,lang:P.lang}:k==='log'?{days:LOG}:k==='qstats'?{s:QS}:{list:TESTS};}
+function syncText(){
+  if(store.mode==='cloud')return (store.dirty.size||store.busy)?'Saving to your Claude account…':'Everything is saved to your Claude account.';
+  if(store.mode==='error')return 'Could not reach cloud storage. Your changes are kept on this device and will be retried.';
+  return 'Progress is saved on this device.';
+}
+function syncBadge(){document.querySelectorAll('.sync').forEach(el=>{el.textContent=syncText();});}
+function save(k){
+  store.dirty.add(k);
+  if(k==='log')pruneLog();
+  lsSave();
+  if(store.db){clearTimeout(store.timer);store.timer=setTimeout(flush,800);}
+  syncBadge();
+}
+async function writeBank(){
+  const enc=new TextEncoder(),chunks=[];let cur=[],bytes=0;
+  QB.forEach(q=>{
+    const n=enc.encode(JSON.stringify(q)).length;
+    if(cur.length&&bytes+n>180000){chunks.push(cur);cur=[];bytes=0;}
+    cur.push(q);bytes+=n;
+  });
+  if(cur.length||!chunks.length)chunks.push(cur);
+  const col=store.db.collection(store.base);
+  for(let i=0;i<chunks.length;i++)await col.doc('qbank-'+i).set(clone({list:chunks[i]}));
+  await col.doc('qbank-meta').set({n:chunks.length,count:QB.length,ts:Date.now()});
+  for(let i=chunks.length;i<store.chunks;i++){try{await col.doc('qbank-'+i).delete();}catch(e){}}
+  store.chunks=chunks.length;
+}
+async function flush(){
+  if(store.busy||!store.db)return;
+  store.busy=true;
+  while(store.dirty.size){
+    const k=store.dirty.values().next().value;
+    store.dirty.delete(k);
+    try{
+      if(k==='qbank')await writeBank();
+      else await store.db.collection(store.base).doc(k).set(clone(payload(k)));
+      store.mode='cloud';store.fail=0;
+    }catch(e){
+      store.mode='error';store.fail++;store.dirty.add(k);break; // keep the change queued and retry later
+    }
+  }
+  store.busy=false;
+  if(store.mode==='error'&&store.fail<6){clearTimeout(store.timer);store.timer=setTimeout(flush,Math.min(60000,3000*Math.pow(2,store.fail)));}
+  syncBadge();
+}
+async function bootCloud(){
+  try{
+    if(!(window.claude&&window.claude.use))return;
+    const r=await Promise.all([window.claude.use('db'),window.claude.use('user')]);
+    const db=r[0],user=r[1];
+    if(!db||!user)return;
+    const id=await user.id();
+    if(!id)return;
+    const col=db.collection('data/users/'+id);
+    const s=await Promise.all(['state','log','tests','qstats','qbank-meta'].map(k=>col.doc(k).get()));
+    store.db=db;store.base='data/users/'+id;store.mode='cloud';
+    if(s[0].exists){P=Object.assign({topics:{},examDate:'',goal:120,lang:'tanglish'},clone(s[0].data()));if(!P.topics)P.topics={};}else store.dirty.add('state');
+    if(s[1].exists){LOG=clone(s[1].data()).days||{};}else store.dirty.add('log');
+    if(s[2].exists){TESTS=clone(s[2].data()).list||[];}else store.dirty.add('tests');
+    if(s[3].exists){
+      const cs=clone(s[3].data()).s||{};let extra=false;
+      Object.keys(QS).forEach(k=>{if(!cs[k]){cs[k]=QS[k];extra=true;}});
+      QS=cs;if(extra)store.dirty.add('qstats');
+    }else store.dirty.add('qstats');
+    if(s[4].exists){
+      // cloud questions win for the same id; questions that exist only on this device are kept and uploaded
+      const n=+(s[4].data().n)||0;store.chunks=n;
+      const parts=await Promise.all(Array.from({length:n},(_,i)=>col.doc('qbank-'+i).get()));
+      let cloud=[];
+      parts.forEach(p=>{if(p.exists)cloud=cloud.concat(clone(p.data()).list||[]);});
+      cloud=cloud.map(normQ).filter(Boolean);
+      const ids=new Set(cloud.map(q=>q.id));let extra=false;
+      QB.forEach(q=>{if(!ids.has(q.id)){cloud.push(q);extra=true;}});
+      QB=cloud;if(extra)store.dirty.add('qbank');
+    }else store.dirty.add('qbank');
+    lsSave();
+    if(store.dirty.size)flush();
+    softRender();
+  }catch(e){store.mode='error';syncBadge();}
+}
+
+/* ---------- question bank: structure, validation, helpers ---------- */
+// A question: id, sid (subject), t (topic), q/o/e (text, options, explanation) in language l ("en" or "ta"),
+// optional x = {q,o,e} translation in the other language, a (correct index 0-3), d (difficulty),
+// ty (type), src, exam, yr, added, rev (last reviewed), vs (status), pvs (status before it was reported).
+// Older questions that only have t, q, o, a, e keep working: every other field gets a default.
+const QD=['Easy','Medium','Hard'];
+const QT=['PYQ','Textbook','Practice','Current Affairs'];
+const QV=['Draft','AI Generated','AI Checked','Human Verified','Published','Reported'];
+const hasTa=s=>/[஀-௿]/.test(String(s||''));
+const qKey=s=>String(s||'').toLowerCase().replace(/[^\p{L}\p{M}\p{N}]+/gu,'');
+const tstr=v=>typeof v==='string'?v.trim():(v==null?'':String(v).trim());
+let idSeq=0;
+function genId(){return 'Q'+Date.now().toString(36)+(idSeq++).toString(36)+Math.random().toString(36).slice(2,5);}
+function normAlt(x){
+  if(!x||typeof x!=='object')return null;
+  const o=Array.isArray(x.o)?x.o.map(tstr):[],q=tstr(x.q);
+  if(!q&&!o.some(Boolean))return null;
+  return {q:q,o:o,e:tstr(x.e)};
+}
+function normQ(raw){
+  if(!raw||typeof raw!=='object')return null;
+  let q=tstr(raw.q),o=Array.isArray(raw.o)?raw.o.map(tstr):[],e=tstr(raw.e),x=normAlt(raw.x),l=(raw.l==='ta'||raw.l==='en')?raw.l:'';
+  if(!q&&(raw.qe||raw.qt)){ // bilingual shape: qt/ot/et = Tamil, qe/oe/ee = English
+    const en={q:tstr(raw.qe),o:Array.isArray(raw.oe)?raw.oe.map(tstr):[],e:tstr(raw.ee)};
+    const ta={q:tstr(raw.qt),o:Array.isArray(raw.ot)?raw.ot.map(tstr):[],e:tstr(raw.et)};
+    const prim=en.q?en:ta,alt=en.q?ta:en;
+    q=prim.q;o=prim.o;e=prim.e;l=en.q?'en':'ta';
+    x=alt.q?normAlt(alt):null;
+  }
+  if(!l)l=hasTa(q)?'ta':'en';
+  const t=tstr(raw.t);
+  const a=typeof raw.a==='number'?raw.a:((raw.a!=null&&raw.a!=='')?Number(raw.a):NaN);
+  return {
+    id:tstr(raw.id)||genId(),sid:TOPIC[t]?TOPIC[t].sub:tstr(raw.sid),t:t,q:q,o:o,a:a,e:e,l:l,x:x,
+    d:QD.indexOf(raw.d)>=0?raw.d:'Medium',ty:QT.indexOf(raw.ty)>=0?raw.ty:'Practice',
+    src:tstr(raw.src),exam:tstr(raw.exam),yr:tstr(raw.yr),added:tstr(raw.added)||dkey(),rev:tstr(raw.rev),
+    vs:QV.indexOf(raw.vs)>=0?raw.vs:'Draft',pvs:tstr(raw.pvs)
+  };
+}
+function qKeyMap(pool){const m=new Map();pool.forEach(q=>{const k=qKey(q.q);if(k&&!m.has(k))m.set(k,q.id);});return m;}
+// safe arithmetic (no eval): used to check answers of questions that are a plain calculation such as "15 + 5 × 4 = ?"
+function arith(expr){
+  const t=String(expr).replace(/−/g,'-').replace(/×|x/gi,'*').replace(/÷/g,'/').replace(/\s+/g,'');
+  if(!/^[\d.+\-*\/()]+$/.test(t))return null;
+  const tok=t.match(/\d+(?:\.\d+)?|[-+*\/()]/g);
+  if(!tok||tok.join('')!==t)return null;
+  const out=[],ops=[],pr={'+':1,'-':1,'*':2,'/':2};
+  const apply=()=>{const op=ops.pop(),b=out.pop(),a=out.pop();if(a===undefined||b===undefined)throw 0;out.push(op==='+'?a+b:op==='-'?a-b:op==='*'?a*b:a/b);};
+  let prev=null;
+  try{
+    for(let i=0;i<tok.length;i++){
+      const k=tok[i];
+      if(/^\d/.test(k)){out.push(parseFloat(k));prev='n';}
+      else if(k==='('){ops.push(k);prev='(';}
+      else if(k===')'){while(ops.length&&ops[ops.length-1]!=='(')apply();if(!ops.length)throw 0;ops.pop();prev=')';}
+      else{
+        if(prev===null||prev==='('){if(k==='-')out.push(0);else throw 0;}
+        else if(prev==='o')throw 0;
+        while(ops.length&&ops[ops.length-1]!=='('&&pr[ops[ops.length-1]]>=pr[k])apply();
+        ops.push(k);prev='o';
+      }
+    }
+    while(ops.length){if(ops[ops.length-1]==='(')throw 0;apply();}
+    return(out.length===1&&isFinite(out[0]))?out[0]:null;
+  }catch(e){return null;}
+}
+function mathCheck(q){
+  const m=String(q.q).replace(/^\s*(simplify|find|evaluate|calculate)\s*[:\-]?\s*/i,'').match(/^([\d\s.+\-−×÷*\/()xX]+?)\s*=\s*\?*\s*$/);
+  if(!m)return null;
+  const v=arith(m[1]);if(v===null)return null;
+  const nums=q.o.map(s=>{const n=parseFloat(String(s).replace(/[,₹%\s]/g,''));return isNaN(n)?null:n;});
+  if(nums.some(n=>n===null))return null;
+  return {ok:Math.abs(nums[q.a]-v)<1e-6,val:v};
+}
+function validateQ(q,km){
+  const err=[],warn=[];
+  if(!q.q||q.q.length<5)err.push('The question is empty or too short.');
+  if(!Array.isArray(q.o)||q.o.length!==4||q.o.some(s=>!s))err.push('Exactly four non-empty options are required.');
+  else if(new Set(q.o.map(qKey)).size<4)err.push('Two options are the same.');
+  if(!Number.isInteger(q.a)||q.a<0||q.a>3)err.push('Choose exactly one correct option (A to D).');
+  if(!TOPIC[q.t])err.push('Choose a valid topic.');
+  else if(q.sid&&q.sid!==TOPIC[q.t].sub)err.push('The subject does not match the topic.');
+  if(q.x&&(!q.x.q||!Array.isArray(q.x.o)||q.x.o.length!==4||q.x.o.some(s=>!s)))err.push('The translation needs a question and four options. Complete it or remove it.');
+  if(!q.e)warn.push('No explanation. Add one so students can learn from mistakes.');
+  if(q.ty==='PYQ'&&!(q.exam&&q.yr&&q.src))err.push('A Previous Year Question needs the exam name, the year and the source. Use Practice if you cannot name them.');
+  if(q.ty==='Textbook'&&!q.src)warn.push('Name the textbook or source.');
+  if((q.vs==='Human Verified'||q.vs==='Published')&&!q.src)warn.push('Verified questions should name the source used for checking.');
+  const k=qKey(q.q);
+  if(k){const map=km||qKeyMap(QB),other=map.get(k);if(other&&other!==q.id)err.push('Duplicate of question '+other+'.');}
+  if(!err.length){const mc=mathCheck(q);if(mc&&!mc.ok)err.push('The marked answer does not match the calculated value ('+mc.val+').');}
+  return {err:err,warn:warn};
+}
+const usable=q=>!!(q&&q.q&&Array.isArray(q.o)&&q.o.length===4&&q.o.every(Boolean)&&Number.isInteger(q.a)&&q.a>=0&&q.a<=3&&TOPIC[q.t]);
+const verified=q=>q.vs==='Human Verified'||q.vs==='Published';
+function qst(id){return QS[id]||(QS[id]={n:0,c:0,sk:0,l:0,bk:false,h:[]});}
+function recordAttempts(list){
+  const now=Date.now();let any=false;
+  list.forEach(q=>{
+    if(!q.id)return;
+    const s=qst(q.id),res=q.sel<0?-1:(q.sel===q.a?1:0);
+    if(res<0)s.sk=(s.sk||0)+1;else{s.n++;if(res===1)s.c++;}
+    s.l=now;s.h=(s.h||[]).concat([[now,res]]).slice(-10);any=true;
+  });
+  if(any)save('qstats');
+}
+function qbPut(q){const i=QB.findIndex(z=>z.id===q.id);if(i>=0)QB[i]=q;else QB.push(q);save('qbank');}
+function qbDel(id){QB=QB.filter(z=>z.id!==id);delete QS[id];save('qbank');save('qstats');}
+function qCount(t){let n=0;for(let i=0;i<QB.length;i++)if(QB[i].t===t)n++;return n;}
+function toggleBm(id){const s=qst(id);s.bk=!s.bk;save('qstats');}
+function toggleReport(id){
+  const q=QB.find(z=>z.id===id);if(!q)return;
+  if(q.vs==='Reported'){q.vs=(q.pvs&&q.pvs!=='Reported')?q.pvs:'Draft';q.pvs='';}
+  else{q.pvs=q.vs;q.vs='Reported';qst(id).rp=Date.now();}
+  save('qbank');save('qstats');
+}
+async function saveFile(name,text){
+  try{
+    if(window.claude&&window.claude.use){
+      const d=await window.claude.use('downloads');
+      if(d){await d.save({filename:name,data:text});toast('Saved '+name);return;}
+    }
+  }catch(e){if(e&&e.code==='declined')return;}
+  try{
+    const b=new Blob([text],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');
+    a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(u),2000);
+  }catch(e){toast('Could not start the download. Use Copy instead.');}
+}
+
+/* ---------- derived numbers ---------- */
+function stats(){
+  let tot=0,a=0,r=0,m=0;const by={};
+  SUBJECTS.forEach(s=>{
+    const o={n:s.t.length,s1:0,s2:0,s3:0};
+    s.t.forEach(t=>{const v=P.topics[t[0]]|0;if(v===1)o.s1++;else if(v===2)o.s2++;else if(v>=3)o.s3++;});
+    by[s.id]=o;tot+=o.n;a+=o.s1+o.s2+o.s3;r+=o.s2+o.s3;m+=o.s3;
+  });
+  return {tot:tot,studied:a,revised:r,mastered:m,by:by};
+}
+const doneOf=o=>o.s1+o.s2+o.s3;
+function streak(){
+  let n=0;const d=new Date();
+  if(!((LOG[dkey(d)]&&LOG[dkey(d)].s)>=300))d.setDate(d.getDate()-1);
+  while(((LOG[dkey(d)]&&LOG[dkey(d)].s)||0)>=300){n++;d.setDate(d.getDate()-1);}
+  return n;
+}
+function weekData(){
+  const out=[];
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=dkey(d);out.push({lbl:['S','M','T','W','T','F','S'][d.getDay()],min:Math.round(((LOG[k]&&LOG[k].s)||0)/60),today:i===0});}
+  return out;
+}
+function weakTopics(){
+  const agg={};
+  TESTS.slice(0,12).forEach(t=>{for(const k in (t.top||{})){const v=t.top[k];const a=agg[k]||(agg[k]=[0,0]);a[0]+=v[0];a[1]+=v[1];}});
+  return Object.keys(agg).filter(k=>TOPIC[k]&&agg[k][1]>=2&&agg[k][0]/agg[k][1]<0.6)
+    .sort((a,b)=>agg[a][0]/agg[a][1]-agg[b][0]/agg[b][1]||agg[b][1]-agg[a][1]).slice(0,5)
+    .map(k=>({id:k,c:agg[k][0],n:agg[k][1]}));
+}
+function nextUp(){
+  const s=stats();
+  const subs=SUBJECTS.slice().sort((a,b)=>doneOf(s.by[a.id])/s.by[a.id].n-doneOf(s.by[b.id])/s.by[b.id].n);
+  const out=[];
+  for(const sb of subs){const t=sb.t.find(x=>!((P.topics[x[0]]|0)>=1));if(t)out.push(t[0]);if(out.length>=4)break;}
+  return out;
+}
+function logStudy(sec,subj,topic){
+  const k=dkey();const d=LOG[k]||(LOG[k]={s:0,subj:{}});
+  d.s+=sec;if(subj)d.subj[subj]=(d.subj[subj]||0)+sec;
+  if(topic&&TM.mark&&!((P.topics[topic]|0)>=1)){P.topics[topic]=1;save('state');}
+  save('log');
+}
+
+/* ---------- charts ---------- */
+function ring(pct,label,sub){
+  const c=2*Math.PI*52,off=c*(1-pct/100);
+  return '<svg class="ring" viewBox="0 0 120 120" role="img" aria-label="'+esc(label)+' '+pct+' percent"><circle class="ring-bg" cx="60" cy="60" r="52"/>'+
+    (pct>0?'<circle class="ring-fg" cx="60" cy="60" r="52" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 60 60)"/>':'')+
+    '<text x="60" y="62" class="ring-n" text-anchor="middle">'+pct+'%</text><text x="60" y="80" class="ring-s" text-anchor="middle">'+esc(sub)+'</text></svg>';
+}
+function weekChart(){
+  const d=weekData();const mx=Math.max(P.goal||0,30,...d.map(x=>x.min));const top=Math.ceil(mx/30)*30;
+  const W=320,H=150,L=34,R=8,T=10,B=24,iw=W-L-R,ih=H-T-B,bw=iw/7;let g='';
+  [0,0.5,1].forEach(f=>{const y=T+ih*(1-f);g+='<line class="gl" x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'"/><text class="ax" x="'+(L-6)+'" y="'+(y+3)+'" text-anchor="end">'+Math.round(top*f)+'</text>';});
+  d.forEach((x,i)=>{const h=ih*x.min/top;g+='<rect class="bar'+(x.today?' on':'')+'" x="'+(L+i*bw+bw*0.2).toFixed(1)+'" y="'+(T+ih-Math.max(h,x.min>0?2:0)).toFixed(1)+'" width="'+(bw*0.6).toFixed(1)+'" height="'+Math.max(h,x.min>0?2:0).toFixed(1)+'" rx="3"/><text class="ax" x="'+(L+i*bw+bw/2).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle">'+x.lbl+'</text>';});
+  if(P.goal>0){const y=T+ih*(1-P.goal/top);g+='<line class="goal" x1="'+L+'" x2="'+(W-R)+'" y1="'+y.toFixed(1)+'" y2="'+y.toFixed(1)+'"/>';}
+  return '<svg class="chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Minutes studied in the last 7 days">'+g+'</svg>';
+}
+function trendChart(){
+  const L=TESTS.slice(0,10).reverse();
+  if(L.length<2)return '<p class="muted">Take two tests to see your score trend.</p>';
+  const W=320,H=150,Lm=34,R=14,T=16,B=14,iw=W-Lm-R,ih=H-T-B;let g='';
+  [0,50,100].forEach(v=>{const y=T+ih*(1-v/100);g+='<line class="gl" x1="'+Lm+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'"/><text class="ax" x="'+(Lm-6)+'" y="'+(y+3)+'" text-anchor="end">'+v+'</text>';});
+  const pts=L.map((t,i)=>{const p=t.n?Math.round(t.c*100/t.n):0;return [Lm+iw*i/(L.length-1),T+ih*(1-p/100),p];});
+  g+='<polyline class="ln" points="'+pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')+'"/>';
+  pts.forEach((p,i)=>{const last=i===pts.length-1;g+='<circle class="pt'+(last?' on':'')+'" cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="'+(last?5:3.5)+'"/>';});
+  const lp=pts[pts.length-1];g+='<text class="ax" x="'+lp[0].toFixed(1)+'" y="'+Math.max(10,lp[1]-9).toFixed(1)+'" text-anchor="end">'+lp[2]+'%</text>';
+  return '<svg class="chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Score percentage across your last tests">'+g+'</svg>';
+}
+
+/* ---------- small markdown for chat ---------- */
+function inl(t){return t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code>$1</code>');}
+function md(s){
+  const lines=esc(s).split('\n');let out='',inList=false;
+  lines.forEach(ln=>{
+    const m=ln.match(/^\s*(?:[-*•]|\d+\.)\s+(.*)$/);
+    if(m){if(!inList){out+='<ul>';inList=true;}out+='<li>'+inl(m[1])+'</li>';}
+    else{if(inList){out+='</ul>';inList=false;}if(ln.trim())out+='<p>'+inl(ln.replace(/^#+\s*/,''))+'</p>';}
+  });
+  if(inList)out+='</ul>';
+  return out;
+}
+
+/* ---------- timer ---------- */
+const CIRC=2*Math.PI*92;
+const TM={mode:'focus',mins:25,targetMs:25*60000,running:false,startedAt:0,accMs:0,subj:'',topic:'',mark:true,done:false,doneSec:0,int:0,lock:null};
+function tmElapsed(){return TM.accMs+(TM.running?Date.now()-TM.startedAt:0);}
+function tmShown(){const el=tmElapsed();return TM.mode==='focus'?Math.max(0,TM.targetMs-el)/1000:el/1000;}
+function tmFrac(){const el=tmElapsed();return TM.mode==='focus'?clamp(1-el/TM.targetMs,0,1):((el/1000)%60)/60;}
+async function wlOn(){try{if(navigator.wakeLock&&!TM.lock){TM.lock=await navigator.wakeLock.request('screen');TM.lock.addEventListener('release',()=>{TM.lock=null;});}}catch(e){}}
+function wlOff(){try{if(TM.lock){TM.lock.release();TM.lock=null;}}catch(e){}}
+function beep(){
+  try{const AC=window.AudioContext||window.webkitAudioContext;const c=new AC();const o=c.createOscillator(),g=c.createGain();o.frequency.value=880;g.gain.value=0.08;o.connect(g);g.connect(c.destination);o.start();setTimeout(()=>{try{o.stop();c.close();}catch(e){}},400);}catch(e){}
+  try{if(navigator.vibrate)navigator.vibrate(200);}catch(e){}
+}
+function tmPaint(){
+  const sec=tmShown();
+  const c=$('#tm-clock');if(c)c.textContent=fmtClock(sec);
+  const r=$('#tm-ring');if(r)r.setAttribute('stroke-dashoffset',(CIRC*(1-tmFrac())).toFixed(1));
+  const ch=$('#tm-chip');if(ch)ch.textContent=fmtClock(sec);
+}
+function tmTick(){
+  if(!TM.running)return;
+  if(TM.mode==='focus'&&tmElapsed()>=TM.targetMs){tmFinish(true);return;}
+  tmPaint();
+}
+function tmStart(){if(TM.running)return;TM.done=false;TM.running=true;TM.startedAt=Date.now();clearInterval(TM.int);TM.int=setInterval(tmTick,250);wlOn();render();}
+function tmPause(){if(!TM.running)return;TM.accMs+=Date.now()-TM.startedAt;TM.running=false;clearInterval(TM.int);wlOff();render();}
+function tmFinish(auto){
+  let ms=tmElapsed();if(TM.mode==='focus')ms=Math.min(ms,TM.targetMs);
+  const sec=Math.round(ms/1000);
+  TM.running=false;clearInterval(TM.int);wlOff();TM.accMs=0;
+  if(sec>=30){logStudy(sec,TM.subj,TM.topic);TM.done=true;TM.doneSec=sec;toast('Saved '+fmtDur(sec)+' of study time');}
+  else if(sec>0)toast('Sessions under 30 seconds are not saved.');
+  if(auto)beep();
+  render();
+}
+function tmReset(){TM.running=false;clearInterval(TM.int);wlOff();TM.accMs=0;TM.done=false;render();}
+
+/* ---------- tests ---------- */
+let T=null,ttInt=0;
+const TS={subjects:new Set(SUBJECTS.map(s=>s.id)),topics:null,n:20,mins:20,minsEdited:false,lang:'en',src:'ai',vs:'all',busy:false,prog:'',err:'',ctl:null};
+function aiErr(e){
+  const c=e&&e.code;
+  if(c==='no_key')return 'Add your API key first: Ask tab, then Setup.';
+  if(c==='not_granted')return 'The AI provider did not accept your key. Check the key and the model name in Ask, then Setup.';
+  if(c==='network')return 'Could not reach the AI provider. Check your internet connection.';
+  if(c==='rate_limited')return 'Too many requests right now. Wait a little and try again.';
+  if(c==='session_expired')return 'Please sign in again and retry.';
+  if(c==='invalid_json')return 'Claude’s reply could not be read as questions. Try again.';
+  if(c==='cancelled')return '';
+  return 'Something went wrong while contacting the AI provider. '+(e&&e.message?'('+String(e.message).slice(0,200)+') ':'')+'Try again in a moment.';
+}
+function planTopics(ids,n){const a=shuffle(ids.slice());const cnt={};for(let i=0;i<n;i++){const id=a[i%a.length];cnt[id]=(cnt[id]||0)+1;}return cnt;}
+function makeBatches(cnt,size){
+  const out=[];let cur={},m=0;
+  Object.keys(cnt).forEach(id=>{let left=cnt[id];while(left>0){const take=Math.min(left,size-m);cur[id]=(cur[id]||0)+take;m+=take;left-=take;if(m===size){out.push(cur);cur={};m=0;}}});
+  if(m>0)out.push(cur);
+  return out;
+}
+function qLang(q,lang){
+  const prim={q:q.q,o:q.o,e:q.e},alt=q.x&&q.x.q&&q.x.o&&q.x.o.length===4?{q:q.x.q,o:q.x.o,e:q.x.e||''}:null;
+  if(!alt)return prim;
+  if(lang==='bi'){
+    const ta=q.l==='ta'?prim:alt,en=q.l==='ta'?alt:prim;
+    return {q:ta.q+'\n'+en.q,o:ta.o.map((v,i)=>v+' / '+en.o[i]),e:[ta.e,en.e].filter(Boolean).join('\n')};
+  }
+  if((lang==='en'||lang==='ta')&&q.l!==lang)return {q:alt.q,o:alt.o,e:alt.e||q.e};
+  return prim;
+}
+function prepBank(q,lang){
+  const v=qLang(q,lang),idx=shuffle([0,1,2,3]);
+  return {id:q.id,t:q.t,q:v.q,o:idx.map(i=>v.o[i]),a:idx.indexOf(q.a),e:v.e||'',vs:q.vs,d:q.d,ty:q.ty,sel:-1,mark:false};
+}
+// questions the student has not met yet come first; unreported questions only
+function bankQs(ids,n){
+  const set=new Set(ids);
+  let pool=QB.filter(q=>usable(q)&&set.has(q.t)&&q.vs!=='Reported');
+  if(TS.vs==='ver')pool=pool.filter(verified);
+  shuffle(pool);
+  pool.sort((a,b)=>((QS[a.id]&&QS[a.id].n)||0)-((QS[b.id]&&QS[b.id].n)||0));
+  return pool.slice(0,n).map(q=>prepBank(q,TS.lang));
+}
+// AI questions are saved to the bank as "AI Generated" (never as PYQ, never as verified). Duplicates reuse the existing question.
+function aiToBank(x,ids,lang){
+  if(!x||typeof x.q!=='string'||!Array.isArray(x.o))return null;
+  const t=TOPIC[x.t]?x.t:ids[0];
+  const q=normQ({t:t,q:x.q,o:x.o,a:Number(x.a),e:x.e,d:'Medium',ty:'Practice',vs:'AI Generated',src:'Written by AI ('+(AI.provider==='claude'?'Claude':PROV[AI.provider].name)+'). Not checked against a textbook.'});
+  const k=qKey(q.q),ex=QB.find(z=>qKey(z.q)===k);
+  if(ex)return(ex.vs==='Reported'||!usable(ex))?null:ex;
+  if(validateQ(q,qKeyMap(QB)).err.length)return null;
+  QB.push(q);
+  return q;
+}
+async function genBatch(cnt,lang,signal){
+  const ids=Object.keys(cnt),total=ids.reduce((a,k)=>a+cnt[k],0);
+  const lines=ids.map(k=>'- '+k+' | '+TOPIC[k].en+' ('+SUB[TOPIC[k].sub].en+') | '+cnt[k]+' question'+(cnt[k]>1?'s':'')).join('\n');
+  const L={en:'English',ta:'Tamil (Tamil script only)',bi:'Tamil first, followed by the English meaning in brackets, for the question and for every option'}[lang]||'English';
+  const mat=(MAT.use&&MAT.chunks.length)?matExcerpt(5000):'';
+  const prompt=(mat?'STUDY MATERIAL (the only source you may use):\n'+mat+'\n\nWrite every question and every correct answer ONLY from the study material above. Do not add outside facts. If the material does not cover a listed topic, still write the questions from the material and tag each with the closest topic id from the list.\n\n':'')+'You are writing a mock test for the TNPSC (Tamil Nadu Public Service Commission) Group 2, 2A and 4 exams.\n'+
+  'Write exactly '+total+' multiple-choice questions, covering these topics with the number of questions given for each (topic id | topic | count):\n'+lines+'\n\n'+
+  'Rules:\n- Each question has exactly 4 options and exactly one correct option.\n'+
+  '- Difficulty: standard TNPSC level, factual and textbook-based (Tamil Nadu State Board and NCERT level).\n'+
+  '- Only use facts you are certain about and that are long established. Do not ask about events after 2023. For arithmetic and reasoning, compute the answer exactly and double-check it.\n'+
+  '- Do not use "all of the above" or "none of the above".\n'+
+  '- Language: '+L+'. For topic ids starting with "tam", always write in Tamil script.\n'+
+  '- "e" is a one or two sentence explanation of why the answer is correct, in the same language as the question.\n\n'+
+  'Reply with only a JSON array. Each item: {"t":"<topic id>","q":"<question>","o":["<option 1>","<option 2>","<option 3>","<option 4>"],"a":<index 0-3 of the correct option>,"e":"<explanation>"}';
+  const arr=await SAMPLE.json(prompt,{signal:signal,modelTier:'default',cache:false});
+  const list=Array.isArray(arr)?arr:(arr&&Array.isArray(arr.questions)?arr.questions:[]);
+  const recs=list.map(x=>aiToBank(x,ids,lang)).filter(Boolean);
+  if(recs.length)save('qbank');
+  return recs.map(q=>prepBank(q,lang));
+}
+async function startTest(){
+  if(TS.busy)return;
+  let ids=TS.topics&&TS.topics.length?TS.topics.slice():[];
+  if(!ids.length)SUBJECTS.filter(s=>TS.subjects.has(s.id)).forEach(s=>s.t.forEach(t=>ids.push(t[0])));
+  if(!ids.length){toast('Pick at least one subject.');return;}
+  const n=TS.n;TS.err='';
+  if(TS.src==='bank'||!aiReady()){
+    const qs=bankQs(ids,n);
+    if(!qs.length){TS.err='Your question bank has no usable questions for this selection. Add questions in Bank, or use AI questions.';render();return;}
+    if(qs.length<n)toast('Only '+qs.length+' questions in your bank match this selection.');
+    beginTest(qs,'bank');return;
+  }
+  if(!SAMPLE){toast('Still connecting to Claude. Try again in a moment.');return;}
+  TS.busy=true;TS.prog='Preparing your questions…';TS.ctl=new AbortController();render();
+  const ctl=TS.ctl;
+  try{
+    const batches=makeBatches(planTopics(ids,n),10);let done=0;
+    const parts=[];
+    for(const b of batches){parts.push(await genBatch(b,TS.lang,ctl.signal));done++;TS.prog='Prepared '+done+' of '+batches.length+' set'+(batches.length>1?'s':'')+'…';const p=$('#ts-prog');if(p)p.textContent=TS.prog;}
+    let qs=[].concat.apply([],parts);
+    if(qs.length<Math.max(3,Math.ceil(n*0.6)))throw {code:'short'};
+    qs=shuffle(qs).slice(0,n);
+    TS.busy=false;beginTest(qs,'ai');
+  }catch(e){
+    try{ctl.abort();}catch(_){}
+    TS.busy=false;
+    if(!(e&&e.code==='cancelled'))TS.err=(e&&e.code==='short')?'Claude returned too few usable questions. Try again, or ask for fewer questions.':aiErr(e);
+    render();
+  }
+}
+function beginTest(qs,src){
+  const dur=TS.mins*60000;
+  T={qs:qs,i:0,start:Date.now(),end:Date.now()+dur,durMs:dur,src:src,confirm:false,done:false,rf:'all',res:null};
+  TS.topics=null;
+  clearInterval(ttInt);ttInt=setInterval(ttTick,500);
+  render();window.scrollTo(0,0);
+}
+function ttTick(){
+  if(!T||T.done){clearInterval(ttInt);return;}
+  const r=(T.end-Date.now())/1000;
+  const el=$('#tt-clock');if(el)el.textContent=fmtClock(r);
+  if(r<=0)finishTest(true);
+}
+function finishTest(auto){
+  if(!T||T.done)return;
+  T.done=true;clearInterval(ttInt);recordAttempts(T.qs);
+  const used=Math.min(T.durMs,Date.now()-T.start)/1000;
+  let c=0,w=0,sk=0;const subj={},top={};
+  T.qs.forEach(q=>{
+    const sid=TOPIC[q.t].sub;
+    subj[sid]=subj[sid]||[0,0];top[q.t]=top[q.t]||[0,0];
+    subj[sid][1]++;top[q.t][1]++;
+    if(q.sel<0)sk++;else if(q.sel===q.a){c++;subj[sid][0]++;top[q.t][0]++;}else w++;
+  });
+  T.res={c:c,w:w,sk:sk,n:T.qs.length,sec:Math.round(used),auto:!!auto,subj:subj};
+  TESTS.unshift({t:Date.now(),n:T.qs.length,c:c,w:w,sk:sk,sec:T.res.sec,src:T.src,subj:subj,top:top});
+  if(TESTS.length>40)TESTS.length=40;
+  save('tests');
+  if(T.res.sec>=30)logStudy(T.res.sec,'','');
+  render();window.scrollTo(0,0);
+}
+
+/* ---------- AI providers: the browser calls the provider directly with the student's own key ---------- */
+const PROV={
+  gemini:{name:'Google Gemini',model:'gemini-2.5-flash',hint:'Free key from aistudio.google.com/apikey'},
+  groq:{name:'Groq',model:'llama-3.3-70b-versatile',hint:'Free key from console.groq.com/keys'},
+  openrouter:{name:'OpenRouter',model:'openrouter/free',hint:'Key from openrouter.ai/keys. Models whose name ends in :free cost nothing'},
+  openai:{name:'OpenAI (ChatGPT)',model:'gpt-4o-mini',hint:'Paid key from platform.openai.com/api-keys'}
+};
+const AIK='tnpsc-ai-v1';
+const AI={provider:'gemini',keys:{},models:{},vlang:'ta-IN',speak:false,chosen:false,pref:''};
+function aiLoad(){try{const j=JSON.parse(localStorage.getItem(AIK)||'null');if(j){if(PROV[j.provider])AI.provider=j.provider;AI.keys=j.keys||{};AI.models=j.models||{};if(j.vlang)AI.vlang=j.vlang;AI.chosen=!!j.chosen;AI.pref=j.provider||'';AI.speak=!!j.speak;}}catch(e){}}
+function aiSave(){try{localStorage.setItem(AIK,JSON.stringify(AI));}catch(e){}}
+const aiKey=()=>(AI.keys[AI.provider]||'').trim();
+const aiReady=()=>(AI.provider==='claude'&&!!CLAUDE)||!!aiKey();
+const aiModel=()=>(AI.models[AI.provider]||'').trim()||PROV[AI.provider].model;
+
+function parseLoose(t){
+  try{return JSON.parse(t);}catch(e){}
+  const f=t.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if(f){try{return JSON.parse(f[1]);}catch(e){}}
+  const a=t.search(/[\[{]/),b=Math.max(t.lastIndexOf(']'),t.lastIndexOf('}'));
+  if(a>=0&&b>a){try{return JSON.parse(t.slice(a,b+1));}catch(e){}}
+  throw {code:'invalid_json',message:'The reply was not valid JSON.',text:t};
+}
+async function aiCall(input,opts){
+  const key=aiKey();
+  if(!key)throw {code:'no_key',message:'No API key'};
+  const p=AI.provider,model=aiModel(),signal=opts&&opts.signal;
+  const turns=typeof input==='string'?[{role:'user',content:input}]:input.map(m=>({role:m.role,content:m.content}));
+  const headers={'Content-Type':'application/json'};
+  let url,body;
+  if(p==='gemini'){
+    const contents=[];
+    turns.forEach(m=>{
+      const r=m.role==='assistant'?'model':'user',last=contents[contents.length-1];
+      if(last&&last.role===r)last.parts[0].text+='\n\n'+m.content;else contents.push({role:r,parts:[{text:m.content}]});
+    });
+    url='https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent';
+    headers['x-goog-api-key']=key;
+    body={contents:contents,generationConfig:{temperature:0.3,maxOutputTokens:8192}};
+  }else{
+    url={groq:'https://api.groq.com/openai/v1/chat/completions',openrouter:'https://openrouter.ai/api/v1/chat/completions',openai:'https://api.openai.com/v1/chat/completions'}[p];
+    headers.Authorization='Bearer '+key;
+    body={model:model,messages:turns};
+    if(p==='openai')body.max_completion_tokens=4096;else{body.max_tokens=4096;body.temperature=0.3;}
+  }
+  let res;
+  try{res=await fetch(url,{method:'POST',headers:headers,body:JSON.stringify(body),signal:signal});}
+  catch(e){
+    if((signal&&signal.aborted)||(e&&e.name==='AbortError'))throw {code:'cancelled',message:'Cancelled'};
+    throw {code:'network',message:'Network error'};
+  }
+  let j=null;
+  try{j=await res.json();}catch(e){}
+  if(!res.ok){
+    const em=j&&j.error;
+    const msg=String(em&&(em.message||em)||'');
+    const code=(res.status===401||res.status===403||(res.status===400&&/api key/i.test(msg)))?'not_granted':res.status===429?'rate_limited':'upstream_error';
+    throw {code:code,message:'HTTP '+res.status+(msg?': '+msg:'')};
+  }
+  let text='',trunc=false;
+  if(p==='gemini'){
+    const c=j&&j.candidates&&j.candidates[0];
+    text=c&&c.content&&c.content.parts?c.content.parts.map(x=>x.text||'').join(''):'';
+    trunc=!!(c&&c.finishReason==='MAX_TOKENS');
+  }else{
+    const c=j&&j.choices&&j.choices[0];
+    text=c&&c.message?(c.message.content||''):'';
+    trunc=!!(c&&c.finish_reason==='length');
+  }
+  if(!text.trim())throw {code:'upstream_error',message:'The model returned an empty reply.'};
+  return {text:text,truncated:trunc};
+}
+function makeProvider(){
+  const f=async function(input,opts){
+    if(AI.provider==='claude'&&CLAUDE)return CLAUDE(input,opts);
+    const r=await aiCall(input,opts);
+    if(opts&&opts.onText){try{opts.onText({text:r.text,delta:r.text});}catch(e){}}
+    return {text:r.text,truncated:r.truncated};
+  };
+  f.json=async function(input,opts){if(AI.provider==='claude'&&CLAUDE)return CLAUDE.json(input,opts);const r=await aiCall(input,opts);return parseLoose(r.text);};
+  return f;
+}
+
+/* ---------- study material and retrieval (the AI only sees the parts that match the question) ---------- */
+const MK='tnpsc-material-v1';
+const MAT={text:'',use:true,strict:true,chunks:[],df:{}};
+const DR={mat:null,vv:null,vvans:''};
+const toks=s=>(String(s).toLowerCase().match(/[\p{L}\p{M}\p{N}]+/gu)||[]).filter(w=>w.length>1).map(w=>w.length>6?w.slice(0,6):w);
+function matIndex(){
+  MAT.chunks=[];MAT.df={};
+  const paras=MAT.text.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean);
+  let cur='';
+  const push=()=>{if(cur.trim())MAT.chunks.push({t:cur.trim(),tf:{}});cur='';};
+  paras.forEach(p=>{
+    if(p.length>1400){push();for(let i=0;i<p.length;i+=1100)MAT.chunks.push({t:p.slice(i,i+1300).trim(),tf:{}});}
+    else if(cur.length+p.length>1100){push();cur=p;}
+    else cur+=(cur?'\n\n':'')+p;
+  });
+  push();
+  MAT.chunks.forEach(c=>{
+    toks(c.t).forEach(w=>{c.tf[w]=(c.tf[w]||0)+1;});
+    Object.keys(c.tf).forEach(w=>{MAT.df[w]=(MAT.df[w]||0)+1;});
+  });
+}
+function matLoad(){
+  try{const j=JSON.parse(localStorage.getItem(MK)||'null');if(j){MAT.text=j.text||'';MAT.use=j.use!==false;MAT.strict=j.strict!==false;}}catch(e){}
+  matIndex();
+}
+function matStore(){
+  try{localStorage.setItem(MK,JSON.stringify({text:MAT.text,use:MAT.use,strict:MAT.strict}));return true;}
+  catch(e){toast('This material is too large to save on this device. Remove some text.');return false;}
+}
+function matSearch(q,k){
+  const qs=Array.from(new Set(toks(q))),N=MAT.chunks.length;
+  const sc=MAT.chunks.map((c,i)=>{let s=0;qs.forEach(w=>{const f=c.tf[w];if(f)s+=(1+Math.log(f))*Math.log(1+N/(MAT.df[w]||1));});return [s,i];});
+  return sc.filter(x=>x[0]>0).sort((a,b)=>b[0]-a[0]).slice(0,k).sort((a,b)=>a[1]-b[1]).map(x=>MAT.chunks[x[1]].t);
+}
+function matExcerpt(max){
+  const idx=shuffle(MAT.chunks.map((c,i)=>i));const out=[];let n=0;
+  for(let a=0;a<idx.length;a++){const t=MAT.chunks[idx[a]].t;if(out.length&&n+t.length>max)break;out.push(t);n+=t.length;}
+  return out.join('\n---\n');
+}
+function groundFor(q){return(MAT.use&&MAT.chunks.length)?matSearch(q,5).join('\n---\n'):'';}
+function groundBlock(q){
+  if(!MAT.use||!MAT.chunks.length)return '';
+  const ex=groundFor(q+' '+(CH.topic&&TOPIC[CH.topic]?TOPIC[CH.topic].en:''));
+  const head=MAT.strict
+    ?'\n\nSTRICT MODE. The student gave you their own study material. Answer ONLY from the excerpts below. Finish every answer with a line starting "Source:" that quotes a short phrase (under 15 words) copied exactly from the excerpt you used. If the excerpts do not contain the answer, say clearly that it is not in the provided material and suggest what to check in the textbook. Never use outside knowledge and never guess.'
+    :'\n\nThe student gave you their own study material. Prefer the excerpts below. If you add anything that is not in them, label it "Outside the material:" so the student can verify it.';
+  return head+'\n\nMATERIAL EXCERPTS:\n'+(ex||'(no matching excerpt found for this question)');
+}
+function langDesc(){
+  return {tanglish:'Tanglish: Tamil written in English letters, mixing in common English exam terms, in the warm tone of a Tamil Nadu tuition teacher',english:'simple English',tamil:'Tamil script, with key exam terms also given in English in brackets'}[P.lang]||'simple English';
+}
+
+/* ---------- voice: speech to text and text to speech (browser features) ---------- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const VO={rec:null};
+function micPaint(){document.querySelectorAll('.mic').forEach(b=>{b.textContent=VO.rec?'Stop':'Speak';});}
+function micToggle(id){
+  if(!SR){toast('Voice input is not supported in this browser. Try Chrome or Edge.');return;}
+  if(VO.rec){try{VO.rec.stop();}catch(e){}return;}
+  const el=document.getElementById(id);if(!el)return;
+  try{if('speechSynthesis' in window)speechSynthesis.cancel();}catch(e){}
+  const r=new SR();r.lang=AI.vlang;r.interimResults=true;r.continuous=false;
+  const base=el.value?el.value+' ':'';
+  r.onresult=ev=>{let t='';for(let i=0;i<ev.results.length;i++)t+=ev.results[i][0].transcript;el.value=base+t;el.dispatchEvent(new Event('input',{bubbles:true}));};
+  r.onerror=ev=>{toast(ev.error==='not-allowed'?'Allow microphone access for this site.':ev.error==='no-speech'?'Did not hear anything. Try again.':'Voice input stopped ('+ev.error+').');};
+  r.onend=()=>{VO.rec=null;micPaint();};
+  VO.rec=r;
+  try{r.start();}catch(e){VO.rec=null;}
+  micPaint();
+}
+function speak(text){
+  try{
+    if(!('speechSynthesis' in window))return;
+    speechSynthesis.cancel();
+    const clean=String(text).replace(/[*_`#>]/g,'').replace(/\s+/g,' ').trim();
+    if(!clean)return;
+    const u=new SpeechSynthesisUtterance(clean.slice(0,1500));u.lang=AI.vlang;
+    const vs=speechSynthesis.getVoices(),pre=AI.vlang.slice(0,2);
+    const v=vs.find(x=>x.lang===AI.vlang)||vs.find(x=>x.lang.toLowerCase().indexOf(pre)===0);
+    if(v)u.voice=v;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+/* ---------- viva: the page asks the student's own questions one by one and the AI checks each answer ---------- */
+const VK='tnpsc-viva-v1';
+const VV={qs:[],i:-1,cur:null,all:[],busy:false,ctl:null,done:false};
+let askTab='chat';
+function vvSaved(){try{return localStorage.getItem(VK)||'';}catch(e){return '';}}
+function vvParse(raw){
+  return raw.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{
+    const p=l.split('||');
+    return {q:p[0].trim().replace(/^\d+[.)]\s*/,''),a:(p[1]||'').trim()};
+  }).filter(x=>x.q);
+}
+function vvShowQ(){const q=VV.qs[VV.i];if(AI.speak&&q)speak(q.q);}
+async function vvEval(){
+  const q=VV.qs[VV.i],cur=VV.cur;
+  VV.busy=true;VV.ctl=new AbortController();
+  const ex=groundFor(q.q+' '+q.a+' '+cur.ans);
+  const prompt='You are a strict but kind TNPSC examiner running a viva. Reply in '+langDesc()+'.\n'+
+    'Question: '+q.q+'\n'+
+    (q.a?'Model answer written by the student\'s teacher (treat it as correct): '+q.a+'\n':'')+
+    (ex?'Study material excerpts:\n'+ex+'\n':'')+
+    'Student answer (it may come from voice, so ignore small spelling slips): '+cur.ans+'\n\n'+
+    'Task: 1) Say whether the answer is correct, partly correct or wrong. 2) Give a score out of 10. 3) State the correct answer in 2 to 3 short lines'+((q.a||ex)?', using only the model answer and the material above. If they do not contain the answer, write "Not in your material" instead of guessing':'')+'. 4) Mention one point the student missed. Keep it short.';
+  try{
+    const r=await SAMPLE(prompt,{cache:false,signal:VV.ctl.signal});
+    cur.fb=r.text;cur.err='';
+    if(AI.speak)speak(r.text);
+  }catch(e){cur.err=aiErr(e)||'Stopped.';}
+  VV.busy=false;
+  render();
+}
+function vvPush(skipped){
+  const q=VV.qs[VV.i];
+  VV.all.push({q:q.q,ans:skipped?'(skipped)':(VV.cur?VV.cur.ans:''),fb:skipped?'':(VV.cur?VV.cur.fb:'')});
+}
+function vvAdvance(){
+  VV.cur=null;
+  if(VV.i<VV.qs.length-1){VV.i++;render();vvShowQ();}
+  else{VV.done=true;render();}
+}
+function askVivaHTML(){
+  if(VV.i<0){
+    const txt=DR.vv!==null?DR.vv:vvSaved();
+    return '<section class="card"><h2>Your questions</h2><p class="muted">Write one question per line. To give the correct answer yourself, add it after || on the same line. The AI asks your questions in order and checks the answers you speak or type.</p>'+
+      '<label class="field" style="margin-top:12px"><span>Questions</span><textarea id="vv-qs" rows="9" placeholder="1. Who chaired the Drafting Committee? || Dr. B. R. Ambedkar&#10;2. Article 21A is about which right?">'+esc(txt)+'</textarea></label>'+
+      '<p class="note">'+((MAT.use&&MAT.chunks.length)?'Answers will be checked against your study material.':'Add your study material in Setup, or put the answer after || so the AI does not have to guess.')+'</p>'+
+      '<div class="row" style="margin-top:12px"><button class="btn primary" data-act="vvStart">Start viva</button></div></section>';
+  }
+  if(VV.done){
+    return '<section class="card"><h2>Viva finished</h2><p class="muted">You went through '+VV.qs.length+' question'+(VV.qs.length===1?'':'s')+'.</p>'+
+      VV.all.map((x,k)=>'<article class="rev"><span class="mono muted">Q'+(k+1)+'</span><p class="q">'+esc(x.q)+'</p><div class="msg me"><div class="bt">'+esc(x.ans)+'</div></div>'+(x.fb?'<div class="msg bot"><div class="md">'+md(x.fb)+'</div></div>':'')+'</article>').join('')+
+      '<div class="row" style="margin-top:14px"><button class="btn primary" data-act="vvReset">Practise again</button></div></section>';
+  }
+  const q=VV.qs[VV.i],cur=VV.cur;
+  let h='<section class="card"><div class="row"><span class="eyebrow">Question '+(VV.i+1)+' of '+VV.qs.length+'</span><span class="sp"></span><button class="link" data-act="vvSpeak">Read aloud</button></div><p class="q">'+esc(q.q)+'</p>';
+  if(!cur){
+    h+='<label class="field"><span>Your answer (type, or tap Speak)</span><textarea id="vv-in" rows="3">'+esc(DR.vvans)+'</textarea></label>'+
+      '<div class="row" style="margin-top:12px"><button class="btn mic" data-act="mic" data-t="vv-in">'+(VO.rec?'Stop':'Speak')+'</button><button class="btn primary" data-act="vvSend">Check my answer</button><button class="btn" data-act="vvSkip">Skip</button></div>';
+  }else{
+    h+='<div class="msg me" style="margin-bottom:10px"><div class="bt">'+esc(cur.ans)+'</div></div>'+
+      (cur.fb?'<div class="msg bot"><div class="md">'+md(cur.fb)+'</div></div>':(cur.err?'<div class="err" role="alert">'+esc(cur.err)+'</div>':'<div class="row"><i class="spin"></i><span class="muted">Checking your answer…</span></div>'))+
+      '<div class="row" style="margin-top:12px">'+(cur.err?'<button class="btn" data-act="vvRetry">Try again</button>':'')+'<button class="btn primary" data-act="vvNext"'+((cur.fb||cur.err)?'':' disabled')+'>'+(VV.i<VV.qs.length-1?'Next question':'Finish')+'</button></div>';
+  }
+  return h+'<div class="row" style="margin-top:12px"><button class="link" data-act="vvReset">End viva</button></div></section>';
+}
+
+/* ---------- Ask tab: chat, viva and setup ---------- */
+function askSetupHTML(){
+  const p=PROV[AI.provider],draft=DR.mat!==null?DR.mat:MAT.text;
+  return '<div class="grid"><section class="card"><h2>AI provider</h2><div class="stack">'+
+    '<label class="field"><span>Provider</span><select data-in="aiProv">'+Object.keys(PROV).map(k=>'<option value="'+k+'"'+(AI.provider===k?' selected':'')+'>'+esc(PROV[k].name)+'</option>').join('')+'</select></label>'+
+    (AI.provider==='claude'?'<p class="muted">Claude is built in here. No key is needed, and usage counts on your own Claude account.</p>':'<label class="field"><span>API key</span><input type="password" id="ai-key" autocomplete="off" data-in="aiKey" value="'+esc(AI.keys[AI.provider]||'')+'" placeholder="Paste your key"></label>'+
+    '<label class="field"><span>Model (leave empty for the default)</span><input type="text" id="ai-model" data-in="aiModel" value="'+esc(AI.models[AI.provider]||'')+'" placeholder="'+esc(p.model)+'"></label>')+
+    '<p class="note">'+esc(p.hint)+'. The key stays only in this browser. Do not use it on a shared computer. Model names change, so type a new model name if the provider says the model is not found.</p>'+
+    '<div class="row"><button class="btn primary" data-act="aiTest">Test connection</button></div></div></section>'+
+    '<section class="card"><h2>Voice</h2><div class="stack"><label class="field"><span>Voice language</span><select data-in="vLang"><option value="ta-IN"'+(AI.vlang==='ta-IN'?' selected':'')+'>Tamil</option><option value="en-IN"'+(AI.vlang==='en-IN'?' selected':'')+'>English (India)</option></select></label>'+
+    '<label class="check"><input type="checkbox" data-in="vSpeak"'+(AI.speak?' checked':'')+'> Read AI answers aloud</label>'+
+    '<p class="note">Speaking to the app works in Chrome and Edge. Tamil voices depend on your phone or computer, so test one answer first.</p></div></section>'+
+    '<section class="card"><h2>Your study material</h2><div class="stack"><p class="muted">Paste notes or book text, or load a .txt file. The AI answers and writes questions from this text.</p>'+
+    '<textarea id="mat-ta" rows="10" placeholder="Paste your material here">'+esc(draft)+'</textarea>'+
+    '<input type="file" id="mat-file" accept=".txt,.md,.csv,.json,text/plain" data-in="matFile">'+
+    '<label class="check"><input type="checkbox" data-in="matUse"'+(MAT.use?' checked':'')+'> Use my material</label>'+
+    '<label class="check"><input type="checkbox" data-in="matStrict"'+(MAT.strict?' checked':'')+'> Answer only from my material, and say "not in material" otherwise</label>'+
+    '<div class="row"><button class="btn primary" data-act="matSave">Save material</button><button class="btn" data-act="matClear">Clear</button><span class="muted">'+MAT.text.length.toLocaleString()+' characters, '+MAT.chunks.length+' parts saved</span></div></div></section></div>';
+}
+function askHTML(){
+  const tabs=[['chat','Chat'],['viva','Viva (voice Q&A)'],['setup','Setup']];
+  let h='<div class="head"><h1>AI coach</h1><p class="muted">Using '+esc(PROV[AI.provider].name)+((MAT.use&&MAT.chunks.length)?', answers checked against your material':'')+'.</p></div>'+
+    '<div class="seg" style="margin-bottom:14px">'+tabs.map(t=>'<button class="'+(askTab===t[0]?'on':'')+'" data-act="askTab" data-v="'+t[0]+'">'+t[1]+'</button>').join('')+'</div>';
+  if(!aiReady()&&askTab!=='setup')h+='<div class="err" style="margin-bottom:14px">Add your API key in Setup to turn on the AI. <button class="link" data-act="askTab" data-v="setup">Open Setup</button></div>';
+  return h+(askTab==='chat'?askChatHTML():askTab==='viva'?askVivaHTML():askSetupHTML());
+}
+document.addEventListener('input',e=>{
+  const t=e.target;if(!t||!t.id)return;
+  if(t.id==='mat-ta')DR.mat=t.value;else if(t.id==='vv-qs')DR.vv=t.value;else if(t.id==='vv-in')DR.vvans=t.value;else if(t.id==='imp-ta'&&IMP)IMP.text=t.value;
+});
+
+/* ---------- chat ---------- */
+const CH={msgs:[],busy:false,ctl:null,topic:''};
+const EXAMPLES=['Explain Fundamental Rights in simple words','Give me a 7-day plan to cover Aptitude basics','Memory tricks for Indian rivers'];
+function chatRules(q){
+  const L={tanglish:'Tanglish: Tamil written in English letters (for example "idhu romba important topic"), mixing in common English exam terms, in the warm tone of a Tamil Nadu tuition teacher',english:'simple English',tamil:'Tamil script, with key exam terms also given in English in brackets'}[P.lang]||'simple English';
+  const tp=CH.topic&&TOPIC[CH.topic]?'The student is currently studying: '+TOPIC[CH.topic].en+' ('+SUB[TOPIC[CH.topic].sub].en+'). ':'';
+  return 'You are a patient, accurate TNPSC coach helping a student prepare for the TNPSC Group 2, 2A and 4 exams (Tamil Nadu State Board textbooks, NCERT-level General Studies, Aptitude and Mental Ability, and General Tamil). '+tp+
+    'Reply in '+L+'. Keep answers short and exam-focused: use short bullet points, include dates and numbers that are commonly asked, and give a memory trick when it helps. If you are not sure about a fact, say so plainly and tell the student to check the textbook. For maths and reasoning, show a quick shortcut method. Do not use tables.'+groundBlock(q);
+}
+function quickText(k){
+  const t=TOPIC[CH.topic];if(!t)return '';
+  const n=t.en;
+  return {explain:'Explain "'+n+'" simply for the TNPSC exam.',points:'Give the most important exam points and facts from "'+n+'" that TNPSC usually asks.',mnemonic:'Give me memory tricks to remember "'+n+'".',quiz:'Ask me 5 practice questions on "'+n+'", one at a time. Ask the first question now and wait for my answer.'}[k]||'';
+}
+function chatLogHTML(){
+  if(!CH.msgs.length)return '<div class="empty"><p class="muted">Ask anything about your TNPSC syllabus. Try one of these:</p><div class="chips">'+EXAMPLES.map(x=>'<button class="chip pick" data-act="chExample" data-q="'+esc(x)+'">'+esc(x)+'</button>').join('')+'</div></div>';
+  return CH.msgs.map(m=>m.role==='user'
+    ?'<div class="msg me"><div class="bt">'+esc(m.content).replace(/\n/g,'<br>')+'</div></div>'
+    :'<div class="msg bot"><div class="md">'+(m.pending&&!m.content?'<span class="muted">Thinking…</span>':md(m.content))+'</div>'+(m.err?'<p class="errnote">'+esc(m.note)+'</p>':'')+'</div>').join('');
+}
+function paintChat(force){
+  const el=$('#chatlog');if(!el)return;
+  const stick=el.scrollHeight-el.scrollTop-el.clientHeight<90;
+  el.innerHTML=chatLogHTML();
+  if(force||stick)el.scrollTop=el.scrollHeight;
+}
+function setComposer(){const s=$('#ch-send'),p=$('#ch-stop');if(s)s.hidden=CH.busy;if(p)p.hidden=!CH.busy;}
+async function chatSend(text){
+  text=(text||'').trim();if(!text)return;
+  if(!SAMPLE){toast(sampleReady?'Claude is not available in this view.':'Still connecting to Claude…');return;}
+  if(CH.busy){toast('Wait for the current answer, or press Stop.');return;}
+  CH.msgs.push({role:'user',content:text});
+  const bot={role:'assistant',content:'',pending:true};CH.msgs.push(bot);
+  const turns=CH.msgs.filter(m=>m!==bot&&!m.err).slice(-10).map(m=>({role:m.role,content:m.content}));
+  CH.busy=true;CH.ctl=new AbortController();paintChat(true);setComposer();
+  try{
+    const r=await SAMPLE([{role:'user',content:chatRules(text)}].concat(turns),{cache:false,signal:CH.ctl.signal,modelTier:'default',onText:u=>{bot.content=u.text;bot.pending=false;paintChat();}});
+    bot.content=r.text;if(r.truncated)bot.content+='\n\n(The answer was cut short. Ask for a shorter answer or the next part.)';
+    if(AI.speak)speak(r.text);
+  }catch(e){
+    if(e&&e.text){bot.content=e.text;}
+    if(e&&e.code==='cancelled'){if(!bot.content)CH.msgs.splice(CH.msgs.indexOf(bot),1);}
+    else{bot.err=true;bot.note=aiErr(e);if(e&&e.code==='refused')bot.content='';}
+  }
+  bot.pending=false;CH.busy=false;CH.ctl=null;paintChat(true);setComposer();
+}
+
+/* ---------- question bank screen ---------- */
+const BKF={q:'',sub:'',topic:'',d:'',ty:'',vs:'',lang:'',bk:false,att:'',page:0};
+const BKX=new Set();
+let BKE=null,BKD='',IMP=null,EXP='';
+function optHTML(list,sel,blank){
+  return(blank!=null?'<option value="">'+esc(blank)+'</option>':'')+list.map(v=>{
+    const val=Array.isArray(v)?v[0]:v,lab=Array.isArray(v)?v[1]:v;
+    return '<option value="'+esc(val)+'"'+(String(sel)===String(val)?' selected':'')+'>'+esc(lab)+'</option>';
+  }).join('');
+}
+function topicList(sid){return(sid&&SUB[sid])?SUB[sid].t.map(t=>[t[0],t[1]]):[];}
+function badgeCls(q){return q.vs==='Reported'?'wrong':verified(q)?'right':'skip';}
+function filterQB(){
+  const s=BKF.q.trim().toLowerCase();
+  return QB.filter(q=>{
+    const st=QS[q.id]||{};
+    if(BKF.sub&&q.sid!==BKF.sub)return false;
+    if(BKF.topic&&q.t!==BKF.topic)return false;
+    if(BKF.d&&q.d!==BKF.d)return false;
+    if(BKF.ty&&q.ty!==BKF.ty)return false;
+    if(BKF.vs&&q.vs!==BKF.vs)return false;
+    if(BKF.lang==='ta'&&!(q.l==='ta'||(q.x&&hasTa(q.x.q))))return false;
+    if(BKF.lang==='en'&&!(q.l==='en'||(q.x&&!hasTa(q.x.q))))return false;
+    if(BKF.bk&&!st.bk)return false;
+    if(BKF.att){
+      const n=st.n||0,w=n-(st.c||0);
+      if(BKF.att==='new'&&n>0)return false;
+      if(BKF.att==='seen'&&n===0)return false;
+      if(BKF.att==='wrong'&&w<1)return false;
+    }
+    if(s){
+      const hay=(q.id+' '+q.q+' '+q.o.join(' ')+' '+q.e+' '+(q.x?q.x.q+' '+q.x.o.join(' '):'')+' '+q.src+' '+q.exam).toLowerCase();
+      if(hay.indexOf(s)<0)return false;
+    }
+    return true;
+  });
+}
+function qCardHTML(q,km){
+  const st=QS[q.id]||{},tp=TOPIC[q.t],open=BKX.has(q.id),v=validateQ(q,km);
+  let h='<article class="qc"><div class="meta"><span class="mono muted">'+esc(q.id)+'</span><span class="tag skip">'+esc(q.d)+'</span>'+
+    '<span class="tag skip">'+esc(q.ty)+((q.ty==='PYQ'&&q.exam)?' · '+esc(q.exam)+' '+esc(q.yr):'')+'</span>'+
+    '<span class="tag '+badgeCls(q)+'">'+esc(q.vs)+'</span>'+(st.bk?'<span class="tag right">Bookmarked</span>':'')+'</div>'+
+    '<div class="muted">'+esc(tp?tp.en+' · '+SUB[tp.sub].en:'No topic chosen')+'</div>'+
+    '<p class="q" style="margin:0">'+esc(q.q)+'</p>';
+  if(q.x)h+='<p class="muted" style="white-space:pre-line;margin:0">'+esc(q.x.q)+'</p>';
+  h+='<div class="opts">'+q.o.map((o,j)=>'<div class="opt'+(j===q.a?' right':'')+'"><span class="bub">'+('ABCDEFGH'[j]||'')+'</span><span class="otxt">'+esc(o)+((q.x&&q.x.o&&q.x.o[j])?' / '+esc(q.x.o[j]):'')+'</span></div>').join('')+'</div>';
+  if(open)h+='<p class="exp"><b>Explanation:</b> '+(esc(q.e)||'None yet.')+((q.x&&q.x.e)?'<br>'+esc(q.x.e):'')+'</p>';
+  if(v.err.length)h+='<div class="err">Needs fixing: '+esc(v.err[0])+'</div>';
+  h+='<div class="note" style="margin:0">'+(q.src?'Source: '+esc(q.src)+'. ':'No source named. ')+(st.n?'Attempted '+st.n+' time'+(st.n===1?'':'s')+', '+(st.c||0)+' correct.':'Not attempted yet.')+' Added '+esc(q.added)+(q.rev?', last reviewed '+esc(q.rev):'')+'.</div>';
+  h+='<div class="row"><button class="link" data-act="bkBm" data-id="'+esc(q.id)+'">'+(st.bk?'Remove bookmark':'Bookmark')+'</button>'+
+    '<button class="link" data-act="bkOpen" data-id="'+esc(q.id)+'">'+(open?'Hide explanation':'Show explanation')+'</button>'+
+    '<button class="link" data-act="bkEdit" data-id="'+esc(q.id)+'">Edit</button>'+
+    '<button class="link" data-act="bkRep" data-id="'+esc(q.id)+'">'+(q.vs==='Reported'?'Clear report':'Report as incorrect')+'</button>'+
+    (BKD===q.id?'<span class="muted">Delete this question?</span><button class="btn sm" data-act="bkDelYes">Yes, delete</button><button class="btn sm" data-act="bkDelNo">Cancel</button>':'<button class="link" data-act="bkDel" data-id="'+esc(q.id)+'">Delete</button>')+'</div></article>';
+  return h;
+}
+function impHTML(){
+  const r=IMP.res;
+  let h='<section class="card" style="margin-bottom:16px"><h2>Import questions from JSON</h2>'+
+    '<p class="muted">Paste a JSON list, or load a .json file. Each question needs <b>t</b> (topic ID), <b>q</b> (question), <b>o</b> (four options), <b>a</b> (correct option, 0 to 3) and ideally <b>e</b> (explanation). Optional: d, ty, vs, src, exam, yr, and x (translation). Questions typed as PYQ must name the exam, year and source. Questions without a status are saved as Draft.</p>'+
+    '<details style="margin-top:10px"><summary>Topic IDs</summary><div class="note mono" style="white-space:pre-line">'+esc(SUBJECTS.map(s=>s.en+'\n'+s.t.map(t=>'  '+t[0]+' = '+t[1]).join('\n')).join('\n'))+'</div></details>'+
+    '<label class="field" style="margin-top:12px"><span>JSON</span><textarea id="imp-ta" class="jsonbox" rows="8">'+esc(IMP.text)+'</textarea></label>'+
+    '<input type="file" id="imp-file" accept=".json,application/json,text/plain" data-in="impFile" style="margin-top:10px">'+
+    '<div class="row" style="margin-top:12px"><button class="btn primary" data-act="impCheck">Check questions</button><button class="btn" data-act="impClose">Close</button></div>';
+  if(IMP.err)h+='<div class="err" role="alert" style="margin-top:12px">'+esc(IMP.err)+'</div>';
+  if(r){
+    h+='<div style="margin-top:14px"><b>'+r.ok.length+'</b> valid, <b>'+r.dup+'</b> duplicates skipped, <b>'+r.bad.length+'</b> invalid.</div>';
+    if(r.bad.length)h+='<ul class="note">'+r.bad.slice(0,10).map(b=>'<li>Item '+b.i+': '+esc(b.why)+'</li>').join('')+(r.bad.length>10?'<li>…and '+(r.bad.length-10)+' more.</li>':'')+'</ul>';
+    if(r.ok.length)h+='<div class="row" style="margin-top:12px"><button class="btn primary" data-act="impCommit">Add '+r.ok.length+' question'+(r.ok.length===1?'':'s')+' to my bank</button></div>';
+  }
+  return h+'</section>';
+}
+function bankHTML(){
+  if(BKE)return bkEditorHTML();
+  const list=filterQB(),per=20,pages=Math.max(1,Math.ceil(list.length/per));
+  BKF.page=clamp(BKF.page,0,pages-1);
+  const slice=list.slice(BKF.page*per,BKF.page*per+per),km=qKeyMap(QB);
+  const nver=QB.filter(verified).length;
+  let h='<div class="head"><h1>Question bank</h1><p class="muted">'+QB.length+' question'+(QB.length===1?'':'s')+', '+nver+' verified by you. AI-written questions are never counted as verified until you check them against a textbook or an official source and change their status.</p></div>'+
+    '<div class="row" style="margin-bottom:14px"><button class="btn primary" data-act="bkAdd">Add question</button><button class="btn" data-act="bkImp">Import JSON</button><button class="btn" data-act="bkExport">Export JSON</button></div>';
+  if(IMP)h+=impHTML();
+  if(EXP){
+    h+='<section class="card" style="margin-bottom:16px"><h2>Export</h2><p class="muted">This is your whole question bank. Save it as a backup or share it.</p><label class="field"><span>JSON</span><textarea id="exp-ta" class="jsonbox" rows="8" readonly>'+esc(EXP)+'</textarea></label>'+
+      '<div class="row" style="margin-top:12px"><button class="btn primary" data-act="expDownload">Download file</button><button class="btn" data-act="expCopy">Copy</button><button class="btn" data-act="expClose">Close</button></div></section>';
+  }
+  h+='<section class="card" style="margin-bottom:16px"><div class="form">'+
+    '<label class="field"><span>Search</span><div class="row" style="flex-wrap:nowrap"><input type="search" id="bk-q" data-in="bkQ" value="'+esc(BKF.q)+'" placeholder="Words, ID or source"><button class="btn" data-act="bkSearch">Go</button></div></label>'+
+    '<label class="field"><span>Subject</span><select data-in="bkSub">'+optHTML(SUBJECTS.map(s=>[s.id,s.en]),BKF.sub,'All subjects')+'</select></label>'+
+    '<label class="field"><span>Topic</span><select data-in="bkTopic"'+(BKF.sub?'':' disabled')+'>'+optHTML(topicList(BKF.sub),BKF.topic,BKF.sub?'All topics':'Choose a subject first')+'</select></label>'+
+    '<label class="field"><span>Difficulty</span><select data-in="bkD">'+optHTML(QD,BKF.d,'Any')+'</select></label>'+
+    '<label class="field"><span>Type</span><select data-in="bkTy">'+optHTML(QT,BKF.ty,'Any')+'</select></label>'+
+    '<label class="field"><span>Status</span><select data-in="bkVs">'+optHTML(QV,BKF.vs,'Any')+'</select></label>'+
+    '<label class="field"><span>Language</span><select data-in="bkLang">'+optHTML([['ta','Has Tamil'],['en','Has English']],BKF.lang,'Any')+'</select></label>'+
+    '<label class="field"><span>Your attempts</span><select data-in="bkAtt">'+optHTML([['new','Not attempted'],['seen','Attempted'],['wrong','Answered wrong at least once']],BKF.att,'Any')+'</select></label>'+
+    '</div><div class="row" style="margin-top:12px"><label class="check"><input type="checkbox" data-in="bkBmOnly"'+(BKF.bk?' checked':'')+'> Bookmarked only</label><span class="sp"></span><span class="muted">'+list.length+' shown</span><button class="link" data-act="bkClear">Clear filters</button></div></section>';
+  h+='<section class="card">'+(slice.length?slice.map(q=>qCardHTML(q,km)).join(''):'<p class="muted">No questions match these filters.</p>')+
+    (pages>1?'<div class="pager"><button class="btn sm" data-act="bkPage" data-v="-1"'+(BKF.page===0?' disabled':'')+'>Previous</button><span class="muted mono">Page '+(BKF.page+1)+' of '+pages+'</span><button class="btn sm" data-act="bkPage" data-v="1"'+(BKF.page>=pages-1?' disabled':'')+'>Next</button></div>':'')+'</section>'+
+    '<p class="note sync" id="sync2" style="text-align:center">'+esc(syncText())+'</p>';
+  return h;
+}
+function bkNew(){
+  return {id:'',added:'',pvs:'',errs:[],warns:[],d:{sid:BKF.sub||'',t:BKF.topic||'',q:'',o:['','','',''],a:-1,e:'',l:'en',x:null,d:'Medium',ty:'Practice',src:'',exam:'',yr:'',vs:'Draft'}};
+}
+function bkFrom(q){
+  const o=q.o.slice();while(o.length<4)o.push('');
+  const x=q.x?{q:q.x.q,o:(q.x.o||[]).slice(),e:q.x.e||''}:null;
+  if(x)while(x.o.length<4)x.o.push('');
+  return {id:q.id,added:q.added,pvs:q.pvs,errs:[],warns:[],d:{sid:q.sid,t:q.t,q:q.q,o:o,a:Number.isInteger(q.a)?q.a:-1,e:q.e,l:q.l,x:x,d:q.d,ty:q.ty,src:q.src,exam:q.exam,yr:q.yr,vs:q.vs}};
+}
+function qeRead(){
+  if(!BKE)return;
+  const d=BKE.d,g=id=>{const el=document.getElementById(id);return el?el.value:null;};
+  [['sid','qe-sid'],['t','qe-t'],['l','qe-l'],['q','qe-q'],['e','qe-e'],['d','qe-d'],['ty','qe-ty'],['src','qe-src'],['exam','qe-exam'],['yr','qe-yr'],['vs','qe-vs']].forEach(p=>{const v=g(p[1]);if(v!==null)d[p[0]]=v;});
+  for(let i=0;i<4;i++){const v=g('qe-o'+i);if(v!==null)d.o[i]=v;}
+  const a=g('qe-a');if(a!==null)d.a=a===''?-1:+a;
+  if(d.x){
+    const xq=g('qe-xq');if(xq!==null)d.x.q=xq;
+    for(let i=0;i<4;i++){const v=g('qe-xo'+i);if(v!==null)d.x.o[i]=v;}
+    const xe=g('qe-xe');if(xe!==null)d.x.e=xe;
+  }
+}
+function bkEditorHTML(){
+  const d=BKE.d,L=d.l==='ta'?'Tamil':'English',X=d.l==='ta'?'English':'Tamil';
+  let h='<div class="head"><h1>'+(BKE.id?'Edit question':'Add a question')+'</h1><p class="muted">Fields marked * are required. Mark a question Human Verified only after you have checked it against a textbook or an official source.</p></div><section class="card"><div class="stack">';
+  if(BKE.errs.length)h+='<div class="err" role="alert"><b>Fix these first</b><ul style="margin:6px 0 0;padding-left:18px">'+BKE.errs.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></div>';
+  if(BKE.warns.length)h+='<div class="note" style="background:var(--warn-soft);padding:10px 12px;border-radius:10px;color:var(--warn)">'+BKE.warns.map(esc).join('<br>')+'</div>';
+  h+='<div class="edit-grid"><label class="field"><span>Subject *</span><select id="qe-sid" data-in="qeSid">'+optHTML(SUBJECTS.map(s=>[s.id,s.en]),d.sid,'Choose a subject')+'</select></label>'+
+    '<label class="field"><span>Topic *</span><select id="qe-t">'+optHTML(topicList(d.sid),d.t,d.sid?'Choose a topic':'Choose a subject first')+'</select></label>'+
+    '<label class="field"><span>Language of the question *</span><select id="qe-l" data-in="qeLang">'+optHTML([['en','English'],['ta','தமிழ் (Tamil)']],d.l)+'</select></label></div>'+
+    '<label class="field"><span>Question in '+L+' *</span><textarea id="qe-q" rows="3">'+esc(d.q)+'</textarea></label>'+
+    '<div class="edit-grid">'+[0,1,2,3].map(i=>'<label class="field"><span>Option '+'ABCD'[i]+' *</span><input id="qe-o'+i+'" value="'+esc(d.o[i])+'"></label>').join('')+'</div>'+
+    '<div class="edit-grid"><label class="field"><span>Correct option *</span><select id="qe-a">'+optHTML([[0,'A'],[1,'B'],[2,'C'],[3,'D']],d.a>=0?d.a:'','Choose')+'</select></label></div>'+
+    '<label class="field"><span>Explanation in '+L+'</span><textarea id="qe-e" rows="3">'+esc(d.e)+'</textarea></label>';
+  if(d.x){
+    h+='<div class="card" style="background:var(--surface-2)"><div class="row"><h2 style="margin:0">'+X+' version</h2><span class="sp"></span><button class="link" data-act="qeRemX">Remove translation</button></div><div class="stack" style="margin-top:10px">'+
+      '<label class="field"><span>Question in '+X+'</span><textarea id="qe-xq" rows="3">'+esc(d.x.q)+'</textarea></label>'+
+      '<div class="edit-grid">'+[0,1,2,3].map(i=>'<label class="field"><span>Option '+'ABCD'[i]+'</span><input id="qe-xo'+i+'" value="'+esc(d.x.o[i])+'"></label>').join('')+'</div>'+
+      '<label class="field"><span>Explanation in '+X+'</span><textarea id="qe-xe" rows="3">'+esc(d.x.e)+'</textarea></label></div></div>';
+  }else h+='<div><button class="btn" data-act="qeAddX">Add '+X+' version (optional)</button></div>';
+  h+='<div class="edit-grid"><label class="field"><span>Difficulty</span><select id="qe-d">'+optHTML(QD,d.d)+'</select></label>'+
+    '<label class="field"><span>Type</span><select id="qe-ty">'+optHTML(QT,d.ty)+'</select></label>'+
+    '<label class="field"><span>Status</span><select id="qe-vs">'+optHTML(QV,d.vs)+'</select></label>'+
+    '<label class="field"><span>Source (textbook, book, paper)</span><input id="qe-src" value="'+esc(d.src)+'" placeholder="e.g. TN State Board Class 10 Social Science"></label>'+
+    '<label class="field"><span>Exam name (for PYQ)</span><input id="qe-exam" value="'+esc(d.exam)+'" placeholder="e.g. Group 4"></label>'+
+    '<label class="field"><span>Year (for PYQ)</span><input id="qe-yr" value="'+esc(d.yr)+'" inputmode="numeric" placeholder="e.g. 2022"></label></div>'+
+    '<div class="row"><button class="btn primary" data-act="qeSave">Save question</button><button class="btn" data-act="qeCancel">Cancel</button></div></div></section>';
+  return h;
+}
+function impCheck(){
+  const ta=$('#imp-ta');if(ta)IMP.text=ta.value;
+  IMP.err='';IMP.res=null;
+  let j;
+  try{j=JSON.parse(IMP.text);}catch(e){IMP.err='This is not valid JSON. Check commas, quotes and brackets.';return;}
+  const arr=Array.isArray(j)?j:(j&&Array.isArray(j.questions)?j.questions:null);
+  if(!arr){IMP.err='Expected a list of questions, or an object with a "questions" list.';return;}
+  const km=qKeyMap(QB),ids=new Set(QB.map(q=>q.id)),res={ok:[],dup:0,bad:[]};
+  arr.forEach((raw,i)=>{
+    const q=normQ(raw);
+    if(!q){res.bad.push({i:i+1,why:'Not a question object.'});return;}
+    if(ids.has(q.id)){const ex=QB.find(z=>z.id===q.id);if(ex&&qKey(ex.q)===qKey(q.q)){res.dup++;return;}q.id=genId();}
+    const v=validateQ(q,km);
+    if(v.err.length){if(/^Duplicate/.test(v.err[0]))res.dup++;else res.bad.push({i:i+1,why:v.err[0]});return;}
+    res.ok.push(q);ids.add(q.id);km.set(qKey(q.q),q.id);
+  });
+  IMP.res=res;
+}
+function bkExportText(){return JSON.stringify({format:'tnpsc-question-bank',version:2,exported:new Date().toISOString(),questions:QB},null,1);}
+
+/* ---------- views ---------- */
+const VIEWS=['home','syllabus','timer','tests','bank','ask'];
+let view='home',sylSub='tam',sylFilter='all';
+const TABS=[
+ ['home','Home','<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>'],
+ ['syllabus','Syllabus','<path d="M9 6h11M9 12h11M9 18h11M3.5 6l1 1 2-2M3.5 12l1 1 2-2M3.5 18l1 1 2-2"/>'],
+ ['timer','Timer','<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/>'],
+ ['tests','Tests','<rect x="5" y="3" width="14" height="18" rx="2"/><circle cx="9.5" cy="9" r="1.3"/><circle cx="9.5" cy="14" r="1.3"/><path d="M13 9h3M13 14h3"/>'],
+ ['bank','Bank','<path d="M4 5h5v14H4zM11 5h5v14h-5zM18 6l3 .8-3.5 12.2-3-.8z"/>'],
+ ['ask','Ask','<path d="M4 5h16v11H9l-5 4z"/>']
+];
+function headerHTML(){
+  const inTest=view==='tests'&&T&&!T.done;
+  let chips='';
+  if(inTest){chips='<span class="chip mono">⏱ <span id="tt-clock">'+fmtClock((T.end-Date.now())/1000)+'</span></span>';}
+  else{
+    if(TM.running||tmElapsed()>0)chips+='<a class="chip mono" href="#timer" aria-label="Study timer running"><i class="pulse"></i><span id="tm-chip">'+fmtClock(tmShown())+'</span></a>';
+    const d=daysToExam();
+    chips+=d==null?'<a class="chip" href="#home" data-act="goPlan">Set exam date</a>':'<span class="chip">'+(d>0?d+' day'+(d===1?'':'s')+' to exam':d===0?'Exam day':'Exam date passed')+'</span>';
+  }
+  const tabs=inTest?'':'<nav class="tabs" aria-label="Sections">'+TABS.map(t=>'<a class="tab" href="#'+t[0]+'"'+(view===t[0]?' aria-current="page"':'')+'><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">'+t[2]+'</svg><span>'+t[1]+'</span></a>').join('')+'</nav>';
+  return '<div class="wrap"><div class="top-row"><a class="brand" href="#home"><span class="omr" aria-hidden="true"><i></i><i></i><i class="on"></i><i></i></span><span>TNPSC Study Desk</span></a><div class="chips">'+chips+'</div></div>'+tabs+'</div>';
+}
+
+function homeHTML(){
+  const s=stats(),pct=s.tot?Math.round(s.studied*100/s.tot):0;
+  const todaySec=(LOG[dkey()]&&LOG[dkey()].s)||0,goalSec=Math.max(1,(P.goal||0)*60),gp=clamp(Math.round(todaySec*100/goalSec),0,100);
+  const nx=nextUp(),weak=weakTopics(),stk=streak();
+  let h='<div class="head"><span class="eyebrow">'+esc(greet())+'</span><h1>Your TNPSC prep</h1></div><div class="grid">';
+  h+='<section class="card"><h2>Syllabus coverage</h2><div class="row cov">'+ring(pct,'Syllabus coverage',s.studied+' / '+s.tot+' topics')+
+    '<div class="kv"><div><b>'+s.studied+'</b> studied</div><div><b>'+s.revised+'</b> revised</div><div><b>'+s.mastered+'</b> mastered</div></div></div>'+
+    '<div class="legend"><span class="l1"><i></i>Studied</span><span class="l2"><i></i>Revised</span><span class="l3"><i></i>Mastered</span></div></section>';
+  h+='<section class="card"><h2>Today</h2><div class="row"><span class="big mono">'+fmtDur(todaySec)+'</span><span class="muted">of '+fmtDur(goalSec)+' goal</span></div>'+
+    '<div class="bar" style="margin:14px 0" role="img" aria-label="'+gp+' percent of daily goal"><i class="s3" style="width:'+gp+'%"></i></div>'+
+    '<div class="row"><span class="muted">'+(stk>0?stk+'-day study streak':'Study 5 minutes today to start a streak')+'</span><span class="sp"></span><button class="btn primary" data-act="goTimer">Start a session</button></div></section>';
+  h+='<section class="card"><h2>Up next</h2>'+(nx.length?nx.map(id=>'<div class="li"><div><div class="ti">'+esc(TOPIC[id].en)+'</div><div class="su">'+esc(SUB[TOPIC[id].sub].en)+'</div></div><div class="row"><button class="btn sm primary" data-act="nuStudy" data-id="'+id+'">Study</button>'+((SAMPLE||!sampleReady)?'<button class="btn sm" data-act="topicAsk" data-id="'+id+'">Ask</button>':'')+'</div></div>').join(''):'<p class="muted">Every topic is marked as studied. Use Syllabus to move topics to Revised and Mastered.</p>')+'</section>';
+  h+='<section class="card"><h2>Subjects</h2>'+SUBJECTS.map(sb=>{const o=s.by[sb.id];return '<button class="subrow" data-act="openSub" data-id="'+sb.id+'"><span class="row"><span>'+esc(sb.en)+'</span><span class="sp"></span><b class="mono">'+doneOf(o)+'/'+o.n+'</b></span><span class="bar"><i class="s3" style="width:'+(o.s3/o.n*100)+'%"></i><i class="s2" style="width:'+(o.s2/o.n*100)+'%"></i><i class="s1" style="width:'+(o.s1/o.n*100)+'%"></i></span></button>';}).join('')+'</section>';
+  h+='<section class="card"><h2>Study minutes, last 7 days</h2>'+weekChart()+'<p class="note">Dashed line is your daily goal ('+(P.goal||0)+' min). Today is the darkest bar.</p></section>';
+  h+='<section class="card"><h2>Test scores</h2>'+trendChart()+'<p class="note">Score percentage for your last '+Math.min(10,TESTS.length)+' test'+(TESTS.length===1?'':'s')+', oldest to newest.</p>'+
+    (weak.length?'<h2 style="margin-top:16px">Needs more practice</h2>'+weak.map(w=>'<div class="li"><div><div class="ti">'+esc(TOPIC[w.id].en)+'</div><div class="su">'+w.c+' of '+w.n+' correct in recent tests</div></div><button class="btn sm" data-act="topicTest" data-id="'+w.id+'">Practice</button></div>').join(''):'')+'</section>';
+  h+='<section class="card" id="plan"><h2>Your plan</h2><div class="form"><label class="field"><span>Exam date</span><input type="date" id="in-exam" data-in="exam" value="'+esc(P.examDate||'')+'"></label><label class="field"><span>Daily goal (minutes)</span><input type="number" inputmode="numeric" min="0" max="720" id="in-goal" data-in="goal" value="'+(P.goal||0)+'"></label></div><p class="note sync" id="sync">'+esc(syncText())+'</p></section>';
+  return h+'</div>';
+}
+
+function sylHTML(){
+  const s=stats(),sb=SUB[sylSub],o=s.by[sylSub];
+  let h='<div class="head"><h1>Syllabus</h1><p class="muted">Tap a status to move a topic from Not started to Studied, Revised and Mastered.</p></div>';
+  h+='<div class="chips" style="margin-bottom:14px">'+SUBJECTS.map(x=>'<button class="chip pick'+(x.id===sylSub?' on':'')+'" data-act="sylSub" data-id="'+x.id+'">'+esc(x.en)+' <b>'+doneOf(s.by[x.id])+'/'+s.by[x.id].n+'</b></button>').join('')+'</div>';
+  h+='<div class="seg" style="margin-bottom:14px">'+[['all','All']].concat(ST.map((n,i)=>[String(i),n])).map(f=>'<button class="'+(sylFilter===f[0]?'on':'')+'" data-act="sylFilt" data-v="'+f[0]+'">'+f[1]+'</button>').join('')+'</div>';
+  const list=sb.t.filter(t=>sylFilter==='all'||(P.topics[t[0]]|0)===+sylFilter);
+  h+='<section class="card"><div class="row"><h2 style="margin:0">'+esc(sb.en)+'</h2><span class="muted">'+esc(sb.ta)+'</span><span class="sp"></span><b class="mono">'+doneOf(o)+'/'+o.n+'</b></div>'+
+    '<div class="bar" style="margin:12px 0 6px"><i class="s3" style="width:'+(o.s3/o.n*100)+'%"></i><i class="s2" style="width:'+(o.s2/o.n*100)+'%"></i><i class="s1" style="width:'+(o.s1/o.n*100)+'%"></i></div>';
+  h+=list.length?list.map(t=>{
+    const v=P.topics[t[0]]|0;
+    return '<div class="topic"><div style="min-width:0"><div class="tn">'+esc(t[1])+'</div><div class="tt">'+esc(t[2])+'</div></div>'+
+      '<button class="stat" data-act="cycle" data-id="'+t[0]+'" aria-label="'+esc(t[1])+': '+ST[v]+'. Tap to change.">'+'<span class="dot s'+v+'"></span>'+ST[v]+'</button>'+
+      '<div class="tools"><button class="link" data-act="nuStudy" data-id="'+t[0]+'">Study timer</button>'+((SAMPLE||!sampleReady)?'<button class="link" data-act="topicAsk" data-id="'+t[0]+'">Ask AI</button>':'')+'<button class="link" data-act="qbTopic" data-id="'+t[0]+'">Questions ('+qCount(t[0])+')</button><button class="link" data-act="topicTest" data-id="'+t[0]+'">Test me</button></div></div>';
+  }).join(''):'<p class="muted" style="margin-top:14px">No topics with this status in '+esc(sb.en)+'.</p>';
+  return h+'</section>';
+}
+
+function timerHTML(){
+  const el=tmElapsed(),busy=TM.running||el>0,focus=TM.mode==='focus';
+  const subj='<option value="">General study</option>'+SUBJECTS.map(s=>'<option value="'+s.id+'"'+(TM.subj===s.id?' selected':'')+'>'+esc(s.en)+'</option>').join('');
+  const tops='<option value="">Any topic</option>'+(TM.subj?SUB[TM.subj].t.map(t=>'<option value="'+t[0]+'"'+(TM.topic===t[0]?' selected':'')+'>'+esc(t[1])+'</option>').join(''):'');
+  const state=TM.running?'Running':el>0?'Paused':TM.done?'Saved '+fmtDur(TM.doneSec):'Ready';
+  const day=LOG[dkey()]||{s:0,subj:{}};
+  const subs=Object.keys(day.subj||{}).filter(k=>SUB[k]).sort((a,b)=>day.subj[b]-day.subj[a]);
+  let h='<div class="head"><h1>Study timer</h1><p class="muted">Time you save here counts towards your daily goal and streak.</p></div><div class="grid">';
+  h+='<section class="card"><div class="clock-wrap"><svg viewBox="0 0 200 200" role="img" aria-label="Timer progress"><circle class="tring-bg" cx="100" cy="100" r="92"/><circle id="tm-ring" class="tring-fg" cx="100" cy="100" r="92" stroke-dasharray="'+CIRC.toFixed(1)+'" stroke-dashoffset="'+(CIRC*(1-tmFrac())).toFixed(1)+'" transform="rotate(-90 100 100)"/></svg><div class="clock"><span id="tm-clock">'+fmtClock(tmShown())+'</span><span class="eyebrow">'+state+'</span></div></div>'+
+    '<div class="row" style="justify-content:center;margin-top:18px">'+(TM.running?'<button class="btn primary" data-act="tmPause">Pause</button>':'<button class="btn primary" data-act="tmStart">'+(el>0?'Resume':'Start')+'</button>')+(busy?'<button class="btn" data-act="tmFinish">Finish &amp; save</button><button class="btn" data-act="tmReset">Discard</button>':'')+'</div></section>';
+  h+='<section class="card"><h2>Session setup</h2><div class="stack"><div class="seg"><button class="'+(focus?'on':'')+'" data-act="tmMode" data-m="focus"'+(busy?' disabled':'')+'>Countdown</button><button class="'+(!focus?'on':'')+'" data-act="tmMode" data-m="stopwatch"'+(busy?' disabled':'')+'>Stopwatch</button></div>'+
+    (focus?'<div class="seg">'+[15,25,45,60,90].map(m=>'<button class="'+(TM.mins===m?'on':'')+'" data-act="tmPreset" data-min="'+m+'"'+(busy?' disabled':'')+'>'+m+' min</button>').join('')+'</div><label class="field"><span>Custom minutes</span><input type="number" inputmode="numeric" min="1" max="300" data-in="tmCustom" value="'+TM.mins+'"'+(busy?' disabled':'')+'></label>':'')+
+    '<div class="form"><label class="field"><span>Subject</span><select data-in="tmSubj"'+(busy?' disabled':'')+'>'+subj+'</select></label><label class="field"><span>Topic</span><select data-in="tmTopic"'+(busy?' disabled':'')+'>'+tops+'</select></label></div>'+
+    '<label class="check"><input type="checkbox" data-in="tmMark"'+(TM.mark?' checked':'')+'> Mark the topic as studied when I save</label></div></section>';
+  h+='<section class="card"><h2>Today</h2><div class="row"><span class="big mono">'+fmtDur(day.s)+'</span><span class="muted">of '+fmtDur((P.goal||0)*60)+' goal</span></div>'+
+    (subs.length?'<div style="margin-top:12px">'+subs.map(k=>'<div class="li"><span>'+esc(SUB[k].en)+'</span><b class="mono">'+fmtDur(day.subj[k])+'</b></div>').join('')+'</div>':'')+'</section>';
+  h+='<section class="card"><h2>Last 7 days</h2>'+weekChart()+'<p class="note">Minutes per day. Dashed line is your daily goal.</p></section>';
+  return h+'</div>';
+}
+
+function testsHTML(){
+  if(T&&!T.done)return runHTML();
+  if(T&&T.done)return resHTML();
+  return setupHTML();
+}
+function setupHTML(){
+  const aiOff=!aiReady();
+  if(aiOff)TS.src='bank';
+  let h='<div class="head"><h1>Mock tests</h1><p class="muted">Pick subjects, set the time, and sit a timed test with an OMR-style answer sheet.</p></div>';
+  if(TS.busy){
+    return h+'<section class="card"><div class="row"><i class="spin"></i><b id="ts-prog">'+esc(TS.prog)+'</b></div><p class="note">The AI is writing fresh questions. This can take up to a minute.</p><div class="row" style="margin-top:14px"><button class="btn" data-act="tsCancel">Cancel</button></div></section>';
+  }
+  const single=TS.topics&&TS.topics.length;
+  h+='<div class="grid"><section class="card"><h2>Test setup</h2><div class="stack">';
+  if(TS.err)h+='<div class="err" role="alert">'+esc(TS.err)+'</div>';
+  if(single)h+='<p>Topic test: <b>'+esc(TOPIC[TS.topics[0]].en)+'</b></p>';
+  else{
+    h+='<div class="chips">'+SUBJECTS.map(s=>'<button class="chip pick'+(TS.subjects.has(s.id)?' on':'')+'" data-act="tsSub" data-id="'+s.id+'" aria-pressed="'+TS.subjects.has(s.id)+'">'+esc(s.en)+'</button>').join('')+'</div>'+
+      '<div class="row"><span class="muted">Quick pick:</span><button class="link" data-act="tsQuick" data-v="all">All</button><button class="link" data-act="tsQuick" data-v="gs">General Studies</button><button class="link" data-act="tsQuick" data-v="apt">Aptitude</button><button class="link" data-act="tsQuick" data-v="tam">Tamil</button></div>';
+  }
+  h+='<div class="form"><label class="field"><span>Questions</span><select data-in="tsN">'+[10,20,30,50].map(n=>'<option'+(TS.n===n?' selected':'')+'>'+n+'</option>').join('')+'</select></label>'+
+    '<label class="field"><span>Time (minutes)</span><input type="number" inputmode="numeric" min="1" max="300" data-in="tsMins" value="'+TS.mins+'"></label>'+
+    '<label class="field"><span>Question language</span><select data-in="tsLang"><option value="en"'+(TS.lang==='en'?' selected':'')+'>English</option><option value="ta"'+(TS.lang==='ta'?' selected':'')+'>தமிழ் (Tamil)</option><option value="bi"'+(TS.lang==='bi'?' selected':'')+'>Tamil + English</option></select></label></div>'+
+    '<div><div class="eyebrow" style="margin-bottom:6px">Questions from</div><div class="seg"><button class="'+(TS.src==='ai'?'on':'')+'" data-act="tsSrc" data-v="ai"'+(aiOff?' disabled':'')+'>AI (fresh each time)</button><button class="'+(TS.src==='bank'?'on':'')+'" data-act="tsSrc" data-v="bank">My question bank</button></div>'+
+    '<p class="note">'+(TS.src==='ai'?(MAT.use&&MAT.chunks.length?'Questions will be written only from your study material (change this in Ask, then Setup). Still check the answers against your book.':'AI-written questions can contain mistakes. Check dates, names and numbers against your textbook, and use the explanations after the test.'):'Your question bank has '+QB.length+' questions. Ones you have not verified yourself are marked in the review after the test. Questions you have not met yet come first.')+'</p></div>'+
+    (TS.src==='bank'?'<div><div class="eyebrow" style="margin-bottom:6px">Include</div><div class="seg"><button class="'+(TS.vs==='all'?'on':'')+'" data-act="tsVs" data-v="all">All unreported</button><button class="'+(TS.vs==='ver'?'on':'')+'" data-act="tsVs" data-v="ver">Verified only</button></div></div>':'')+'<div><button class="btn primary" data-act="tsStart">Start test</button></div></div></section>';
+  h+='<section class="card"><h2>Recent tests</h2>'+(TESTS.length?TESTS.slice(0,6).map(t=>{const p=t.n?Math.round(t.c*100/t.n):0;return '<div class="li"><div><div class="ti">'+t.c+' / '+t.n+' correct</div><div class="su">'+esc(new Date(t.t).toLocaleDateString(undefined,{day:'numeric',month:'short'}))+' · '+fmtDur(t.sec)+' · '+(t.src==='ai'?'AI questions':'Question bank')+'</div></div><b class="mono">'+p+'%</b></div>';}).join(''):'<p class="muted">No tests yet. Your scores and weak topics will show up here and on Home.</p>')+'</section></div>';
+  return h;
+}
+function runHTML(){
+  const q=T.qs[T.i],n=T.qs.length,ans=T.qs.filter(x=>x.sel>=0).length,mk=T.qs.filter(x=>x.mark).length,last=T.i===n-1;
+  let h='<div class="run"><section class="card"><div class="row"><span class="eyebrow">Question '+(T.i+1)+' of '+n+'</span><span class="sp"></span><span class="muted">'+esc(SUB[TOPIC[q.t].sub].en)+'</span></div><p class="q">'+esc(q.q)+'</p><div class="opts">'+
+    q.o.map((o,j)=>'<button class="opt'+(q.sel===j?' sel':'')+'" data-act="tPick" data-j="'+j+'" aria-pressed="'+(q.sel===j)+'"><span class="bub">'+'ABCD'[j]+'</span><span class="otxt">'+esc(o)+'</span></button>').join('')+'</div>'+
+    '<div class="row qa"><button class="btn" data-act="tPrev"'+(T.i===0?' disabled':'')+'>Previous</button><button class="btn" data-act="tMark">'+(q.mark?'Unmark review':'Mark for review')+'</button><button class="btn" data-act="tClear"'+(q.sel<0?' disabled':'')+'>Clear</button><span class="sp"></span><button class="btn primary" data-act="tNext">'+(last?'Finish':'Next')+'</button></div></section>'+
+    '<section class="card"><div class="row"><h2 style="margin:0">Answer sheet</h2><span class="sp"></span><span class="muted">'+ans+' answered · '+mk+' marked</span></div><div class="palette">'+
+    T.qs.map((x,k)=>'<button class="pal'+(k===T.i?' cur':'')+(x.sel>=0?' ans':'')+(x.mark?' mk':'')+'" data-act="tGo" data-k="'+k+'" aria-label="Question '+(k+1)+(x.sel>=0?', answered':', not answered')+(x.mark?', marked':'')+'">'+(k+1)+'</button>').join('')+'</div>'+
+    '<p class="note">Filled bubble: answered. Amber ring: marked for review.</p><div class="row" style="margin-top:12px"><button class="btn primary" data-act="tSubmit">Submit test</button></div>'+
+    (T.confirm?'<div class="confirm" role="alertdialog" aria-label="Submit test"><p><b>Submit now?</b> '+ans+' of '+n+' answered'+(mk?', '+mk+' marked for review':'')+'.</p><div class="row"><button class="btn primary" data-act="tConfirm">Yes, submit</button><button class="btn" data-act="tKeep">Keep going</button></div></div>':'')+'</section></div>';
+  return h;
+}
+function revItem(q,k){
+  const st=q.sel<0?'skip':(q.sel===q.a?'right':'wrong');
+  return '<article class="rev"><div class="row"><span class="mono muted">Q'+(k+1)+'</span><span class="tag '+st+'">'+(st==='right'?'Correct':st==='wrong'?'Wrong':'Skipped')+'</span><span class="muted">'+esc(TOPIC[q.t].en)+'</span>'+((q.vs&&q.vs!=='Published'&&q.vs!=='Human Verified')?'<span class="tag skip">'+esc(q.vs)+', not verified</span>':'')+'</div><p class="q">'+esc(q.q)+'</p><div class="opts">'+
+    q.o.map((o,j)=>'<div class="opt'+(j===q.a?' right':(j===q.sel?' wrong':''))+'"><span class="bub">'+'ABCD'[j]+'</span><span class="otxt">'+esc(o)+(j===q.a?' ✓':'')+'</span></div>').join('')+'</div>'+
+    (q.e?'<p class="exp"><b>Why:</b> '+esc(q.e)+'</p>':'')+'<div class="row"><button class="link" data-act="tExplain" data-k="'+k+'">Explain with AI</button>'+(q.id?'<button class="link" data-act="qBm" data-id="'+esc(q.id)+'">'+((QS[q.id]&&QS[q.id].bk)?'Remove bookmark':'Bookmark')+'</button><button class="link" data-act="qRep" data-id="'+esc(q.id)+'">Report as incorrect</button>':'')+'</div>'+'</article>';
+}
+function resHTML(){
+  const r=T.res,pct=r.n?Math.round(r.c*100/r.n):0;
+  let h='<div class="head"><span class="eyebrow">'+(r.auto?'Time is up':'Test submitted')+'</span><h1>Your result</h1></div><div class="grid">';
+  h+='<section class="card"><div class="row cov">'+ring(pct,'Score','SCORE')+'<div class="kv"><div><b>'+r.c+'</b> correct</div><div><b>'+r.w+'</b> wrong</div><div><b>'+r.sk+'</b> skipped</div><div class="muted">Time used '+fmtDur(r.sec)+' of '+fmtDur(T.durMs/1000)+'</div></div></div></section>';
+  h+='<section class="card"><h2>By subject</h2>'+Object.keys(r.subj).map(id=>{const v=r.subj[id],p=v[1]?Math.round(v[0]*100/v[1]):0;return '<div class="subrow static"><span class="row"><span>'+esc(SUB[id].en)+'</span><span class="sp"></span><b class="mono">'+v[0]+'/'+v[1]+'</b></span><span class="bar"><i class="s3" style="width:'+p+'%"></i></span></div>';}).join('')+'</section></div>';
+  const items=T.qs.map((q,k)=>[q,k]).filter(x=>T.rf==='all'||(T.rf==='wrong'&&x[0].sel>=0&&x[0].sel!==x[0].a)||(T.rf==='skip'&&x[0].sel<0));
+  h+='<section class="card" style="margin-top:16px"><div class="row"><h2 style="margin:0">Review answers</h2><span class="sp"></span><div class="seg">'+[['all','All'],['wrong','Wrong ('+r.w+')'],['skip','Skipped ('+r.sk+')']].map(f=>'<button class="'+(T.rf===f[0]?'on':'')+'" data-act="tRf" data-v="'+f[0]+'">'+f[1]+'</button>').join('')+'</div></div>'+
+    (items.length?items.map(x=>revItem(x[0],x[1])).join(''):'<p class="muted" style="margin-top:12px">Nothing to show here.</p>')+
+    '<div class="row" style="margin-top:16px"><button class="btn primary" data-act="tNew">Take another test</button><button class="btn" data-act="goHome">Back to Home</button></div></section>';
+  return h;
+}
+
+function askChatHTML(){
+  const off=sampleReady&&!SAMPLE;
+  const topics='<option value="">Any TNPSC topic</option>'+SUBJECTS.map(s=>'<optgroup label="'+esc(s.en)+'">'+s.t.map(t=>'<option value="'+t[0]+'"'+(CH.topic===t[0]?' selected':'')+'>'+esc(t[1])+'</option>').join('')+'</optgroup>').join('');
+  let h='';
+  if(off)h+='<div class="err" style="margin-bottom:14px">Claude is not available in this view. Open this page inside Claude to use the doubt helper.</div>';
+  h+='<section class="card"><div class="form"><label class="field"><span>Topic you are studying</span><select data-in="chTopic">'+topics+'</select></label>'+
+    '<label class="field"><span>Reply language</span><select data-in="chLang"><option value="tanglish"'+(P.lang==='tanglish'?' selected':'')+'>Tanglish</option><option value="english"'+(P.lang==='english'?' selected':'')+'>English</option><option value="tamil"'+(P.lang==='tamil'?' selected':'')+'>தமிழ்</option></select></label></div>'+
+    '<div class="chips" style="margin:14px 0"><button class="chip pick" data-act="chQuick" data-k="explain">Explain simply</button><button class="chip pick" data-act="chQuick" data-k="points">Key exam points</button><button class="chip pick" data-act="chQuick" data-k="mnemonic">Memory tricks</button><button class="chip pick" data-act="chQuick" data-k="quiz">Quiz me</button></div>'+
+    '<div id="chatlog" class="chatlog" aria-live="polite"></div>'+
+    '<div class="composer"><textarea id="ch-in" rows="2" placeholder="Type your doubt…"'+(off?' disabled':'')+'></textarea><div class="row" style="justify-content:flex-end"><button class="btn mic" data-act="mic" data-t="ch-in">'+(VO.rec?'Stop':'Speak')+'</button><button class="btn primary" id="ch-send" data-act="chSend"'+(off?' disabled':'')+'>Send</button><button class="btn" id="ch-stop" data-act="chStop" hidden>Stop</button></div></div>'+
+    '<p class="note">AI can make mistakes. Turn on "Answer only from my material" in Setup for answers checked against your own notes.</p></section>';
+  return h;
+}
+
+/* ---------- render ---------- */
+function render(){
+  document.body.classList.toggle('in-test',view==='tests'&&!!T&&!T.done);
+  $('#top').innerHTML=headerHTML();
+  const fn={home:homeHTML,syllabus:sylHTML,timer:timerHTML,tests:testsHTML,ask:askHTML,bank:bankHTML}[view]||homeHTML;
+  $('#view').innerHTML=fn();
+  if(view==='ask'){paintChat(true);setComposer();}
+}
+function softRender(){
+  const a=document.activeElement;
+  if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&$('#view').contains(a))return;
+  if(TS.busy)return;
+  render();
+}
+function go(v){view=v;render();window.scrollTo(0,0);if(location.hash.slice(1)!==v)location.hash=v;}
+window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(VIEWS.indexOf(h)>=0&&h!==view){view=h;render();window.scrollTo(0,0);}});
+
+/* ---------- events ---------- */
+const H={
+  goPlan(){go('home');setTimeout(()=>{const p=$('#plan');if(p)p.scrollIntoView({block:'center'});const i=$('#in-exam');if(i)i.focus();},60);},
+  goTimer(){go('timer');},
+  mic(el){micToggle(el.dataset.t);},
+  tsVs(el){TS.vs=el.dataset.v;render();},
+  qBm(el){toggleBm(el.dataset.id);render();},
+  qRep(el){toggleReport(el.dataset.id);toast('Marked as reported. It will not appear in tests until you clear the report in Bank.');render();},
+  qbTopic(el){const t=TOPIC[el.dataset.id];BKF.sub=t.sub;BKF.topic=t.id;BKF.page=0;BKE=null;go('bank');},
+  bkAdd(){BKE=bkNew();render();window.scrollTo(0,0);},
+  bkEdit(el){const q=QB.find(z=>z.id===el.dataset.id);if(!q)return;BKE=bkFrom(q);render();window.scrollTo(0,0);},
+  bkOpen(el){const id=el.dataset.id;if(BKX.has(id))BKX.delete(id);else BKX.add(id);render();},
+  bkBm(el){toggleBm(el.dataset.id);render();},
+  bkRep(el){toggleReport(el.dataset.id);render();},
+  bkDel(el){BKD=el.dataset.id;render();},
+  bkDelNo(){BKD='';render();},
+  bkDelYes(){const id=BKD;BKD='';if(id){qbDel(id);toast('Question deleted.');}render();},
+  bkPage(el){BKF.page+=+el.dataset.v;render();window.scrollTo(0,0);},
+  bkClear(){Object.assign(BKF,{q:'',sub:'',topic:'',d:'',ty:'',vs:'',lang:'',bk:false,att:'',page:0});render();},
+  bkSearch(){const el=$('#bk-q');BKF.q=el?el.value:BKF.q;BKF.page=0;render();},
+  bkImp(){IMP={text:'',res:null,err:''};EXP='';render();},
+  impCheck(){impCheck();render();},
+  impClose(){IMP=null;render();},
+  impCommit(){
+    if(!IMP||!IMP.res)return;
+    const n=IMP.res.ok.length;
+    IMP.res.ok.forEach(q=>QB.push(q));
+    if(n){save('qbank');toast(n+' question'+(n===1?'':'s')+' added.');}
+    IMP=null;render();
+  },
+  bkExport(){EXP=bkExportText();IMP=null;render();},
+  expClose(){EXP='';render();},
+  expDownload(){saveFile('tnpsc-question-bank-'+dkey()+'.json',EXP);},
+  expCopy(){
+    const ta=$('#exp-ta');
+    try{navigator.clipboard.writeText(EXP).then(()=>toast('Copied.')).catch(()=>{if(ta){ta.focus();ta.select();}toast('Select the text and copy it with Ctrl+C.');});}
+    catch(e){if(ta){ta.focus();ta.select();}toast('Select the text and copy it with Ctrl+C.');}
+  },
+  qeAddX(){qeRead();BKE.d.x={q:'',o:['','','',''],e:''};render();},
+  qeRemX(){qeRead();BKE.d.x=null;render();},
+  qeCancel(){BKE=null;render();window.scrollTo(0,0);},
+  qeSave(){
+    qeRead();const d=BKE.d;
+    const rec=normQ({id:BKE.id,t:d.t,sid:d.sid,q:d.q,o:d.o,a:d.a,e:d.e,l:d.l,x:d.x,d:d.d,ty:d.ty,src:d.src,exam:d.exam,yr:d.yr,vs:d.vs,added:BKE.added,rev:dkey(),pvs:BKE.pvs});
+    const v=validateQ(rec,null);
+    BKE.errs=v.err;BKE.warns=v.warn;
+    if(v.err.length){render();window.scrollTo(0,0);return;}
+    qbPut(rec);BKE=null;toast('Question saved.');render();window.scrollTo(0,0);
+  },
+  askTab(el){askTab=el.dataset.v;render();},
+  async aiTest(){
+    const k=$('#ai-key'),m=$('#ai-model');
+    if(k)AI.keys[AI.provider]=k.value.trim();
+    if(m)AI.models[AI.provider]=m.value.trim();
+    aiSave();toast('Testing the connection…');
+    try{const r=await SAMPLE('Reply with the single word OK.',{cache:false});toast('Connected. The AI replied: '+r.text.trim().slice(0,40));}
+    catch(e){toast(aiErr(e)||'The test failed.');}
+  },
+  matSave(){
+    const ta=$('#mat-ta');let t=ta?ta.value:MAT.text;
+    if(t.length>400000){t=t.slice(0,400000);toast('Only the first 400,000 characters were kept.');}
+    MAT.text=t;DR.mat=null;matIndex();
+    if(matStore()&&t.length<=400000)toast('Saved '+MAT.chunks.length+' parts of material.');
+    render();
+  },
+  matClear(){MAT.text='';DR.mat=null;matIndex();matStore();render();},
+  vvStart(){
+    const ta=$('#vv-qs');const raw=ta?ta.value:(DR.vv||'');
+    DR.vv=raw;try{localStorage.setItem(VK,raw);}catch(e){}
+    const qs=vvParse(raw);
+    if(!qs.length){toast('Write at least one question.');return;}
+    if(!aiReady()){toast('Add your API key in Setup first.');return;}
+    VV.qs=qs;VV.i=0;VV.cur=null;VV.all=[];VV.done=false;render();vvShowQ();
+  },
+  vvSend(){
+    const ta=$('#vv-in');const text=ta?ta.value.trim():'';
+    if(VV.busy)return;
+    if(!text){toast('Type or speak your answer first.');return;}
+    DR.vvans='';try{if(VO.rec)VO.rec.stop();}catch(e){}
+    VV.cur={ans:text,fb:'',err:''};render();vvEval();
+  },
+  vvRetry(){if(!VV.cur||VV.busy)return;VV.cur.err='';VV.cur.fb='';render();vvEval();},
+  vvSkip(){if(VV.busy)return;vvPush(true);vvAdvance();},
+  vvNext(){if(VV.busy)return;vvPush(false);vvAdvance();},
+  vvReset(){
+    try{if(VV.ctl)VV.ctl.abort();}catch(e){}
+    try{if('speechSynthesis' in window)speechSynthesis.cancel();}catch(e){}
+    VV.i=-1;VV.cur=null;VV.all=[];VV.done=false;VV.busy=false;render();
+  },
+  vvSpeak(){const q=VV.qs[VV.i];if(q)speak(q.q);},
+  goHome(){T=null;go('home');},
+  cycle(el){const id=el.dataset.id;P.topics[id]=((P.topics[id]|0)+1)%4;save('state');render();},
+  sylSub(el){sylSub=el.dataset.id;render();},
+  sylFilt(el){sylFilter=el.dataset.v;render();},
+  openSub(el){sylSub=el.dataset.id;sylFilter='all';go('syllabus');},
+  nuStudy(el){if(!(TM.running||tmElapsed()>0)){TM.subj=TOPIC[el.dataset.id].sub;TM.topic=el.dataset.id;}go('timer');},
+  topicAsk(el){CH.topic=el.dataset.id;askTab='chat';go('ask');chatSend(quickText('explain'));},
+  topicTest(el){TS.topics=[el.dataset.id];TS.n=10;TS.mins=10;TS.minsEdited=true;T=null;go('tests');startTest();},
+  tmStart(){tmStart();},tmPause(){tmPause();},tmFinish(){tmFinish(false);},tmReset(){tmReset();},
+  tmMode(el){TM.mode=el.dataset.m;render();},
+  tmPreset(el){TM.mins=+el.dataset.min;TM.targetMs=TM.mins*60000;render();},
+  tsSub(el){const id=el.dataset.id;if(TS.subjects.has(id))TS.subjects.delete(id);else TS.subjects.add(id);TS.topics=null;render();},
+  tsQuick(el){const v=el.dataset.v;const all=SUBJECTS.map(s=>s.id);TS.subjects=new Set(v==='all'?all:v==='gs'?all.filter(x=>x!=='tam'&&x!=='apt'):[v]);TS.topics=null;render();},
+  tsSrc(el){TS.src=el.dataset.v;render();},
+  tsStart(){startTest();},
+  tsCancel(){try{if(TS.ctl)TS.ctl.abort();}catch(e){}TS.busy=false;render();},
+  tPick(el){T.qs[T.i].sel=+el.dataset.j;render();},
+  tGo(el){T.i=+el.dataset.k;T.confirm=false;render();window.scrollTo(0,0);},
+  tPrev(){if(T.i>0){T.i--;render();}},
+  tNext(){if(T.i<T.qs.length-1){T.i++;render();}else{T.confirm=true;render();}},
+  tMark(){const q=T.qs[T.i];q.mark=!q.mark;render();},
+  tClear(){T.qs[T.i].sel=-1;render();},
+  tSubmit(){T.confirm=true;render();},
+  tKeep(){T.confirm=false;render();},
+  tConfirm(){finishTest(false);},
+  tRf(el){T.rf=el.dataset.v;render();},
+  tNew(){T=null;TS.err='';render();window.scrollTo(0,0);},
+  tExplain(el){
+    const q=T.qs[+el.dataset.k];
+    CH.topic=q.t;
+    const msg='Explain this TNPSC question and why the correct answer is right.\nQuestion: '+q.q+'\nOptions: '+q.o.map((o,j)=>'ABCD'[j]+') '+o).join('  ')+'\nCorrect answer: '+'ABCD'[q.a]+'\nMy answer: '+(q.sel<0?'skipped':'ABCD'[q.sel]);
+    askTab='chat';go('ask');chatSend(msg);
+  },
+  chSend(){const ta=$('#ch-in');if(!ta)return;const t=ta.value;if(!t.trim())return;ta.value='';chatSend(t);},
+  chStop(){try{if(CH.ctl)CH.ctl.abort();}catch(e){}},
+  chQuick(el){if(!CH.topic){toast('Pick a topic first.');return;}chatSend(quickText(el.dataset.k));},
+  chExample(el){chatSend(el.dataset.q);}
+};
+const IN={
+  exam(el){P.examDate=el.value;save('state');render();},
+  aiProv(el){AI.provider=el.value;AI.chosen=true;aiSave();render();},
+  bkQ(el){BKF.q=el.value;BKF.page=0;render();},
+  bkSub(el){BKF.sub=el.value;BKF.topic='';BKF.page=0;render();},
+  bkTopic(el){BKF.topic=el.value;BKF.page=0;render();},
+  bkD(el){BKF.d=el.value;BKF.page=0;render();},
+  bkTy(el){BKF.ty=el.value;BKF.page=0;render();},
+  bkVs(el){BKF.vs=el.value;BKF.page=0;render();},
+  bkLang(el){BKF.lang=el.value;BKF.page=0;render();},
+  bkAtt(el){BKF.att=el.value;BKF.page=0;render();},
+  bkBmOnly(el){BKF.bk=el.checked;BKF.page=0;render();},
+  qeSid(){qeRead();BKE.d.t='';render();},
+  qeLang(){qeRead();render();},
+  impFile(el){
+    const f=el.files&&el.files[0];if(!f||!IMP)return;
+    if(f.size>5000000){IMP.err='That file is larger than 5 MB.';render();return;}
+    f.text().then(t=>{IMP.text=t;IMP.res=null;IMP.err='';render();}).catch(()=>{IMP.err='Could not read that file.';render();});
+  },
+  aiKey(el){AI.keys[AI.provider]=el.value.trim();aiSave();},
+  aiModel(el){AI.models[AI.provider]=el.value.trim();aiSave();},
+  vLang(el){AI.vlang=el.value;aiSave();},
+  vSpeak(el){AI.speak=el.checked;aiSave();if(!el.checked){try{speechSynthesis.cancel();}catch(e){}}},
+  matUse(el){MAT.use=el.checked;matStore();render();},
+  matStrict(el){MAT.strict=el.checked;matStore();},
+  matFile(el){
+    const f=el.files&&el.files[0];if(!f)return;
+    if(f.size>2000000){toast('That file is too large. Use a text file under 2 MB.');return;}
+    f.text().then(t=>{const ta=$('#mat-ta');const cur=ta?ta.value:(DR.mat||'');const nv=(cur?cur+'\n\n':'')+t;if(ta)ta.value=nv;DR.mat=nv;toast('File loaded. Press Save material.');}).catch(()=>toast('Could not read that file.'));
+  },
+  goal(el){P.goal=clamp(Math.round(+el.value)||0,0,720);save('state');render();},
+  tmCustom(el){const m=clamp(Math.round(+el.value)||25,1,300);TM.mins=m;TM.targetMs=m*60000;render();},
+  tmSubj(el){TM.subj=el.value;TM.topic='';render();},
+  tmTopic(el){TM.topic=el.value;},
+  tmMark(el){TM.mark=el.checked;},
+  tsN(el){TS.n=+el.value;if(!TS.minsEdited)TS.mins=TS.n;render();},
+  tsMins(el){TS.mins=clamp(Math.round(+el.value)||TS.n,1,300);TS.minsEdited=true;render();},
+  tsLang(el){TS.lang=el.value;},
+  chTopic(el){CH.topic=el.value;},
+  chLang(el){P.lang=el.value;save('state');}
+};
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]');if(!el)return;
+  const f=H[el.dataset.act];if(!f)return;
+  if(el.tagName==='A')e.preventDefault();
+  f(el,e);
+});
+document.addEventListener('change',e=>{
+  const el=e.target.closest('[data-in]');if(!el)return;
+  const f=IN[el.dataset.in];if(f)f(el);
+});
+document.addEventListener('keydown',e=>{
+  if(e.target&&e.target.id==='ch-in'&&e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();H.chSend();}
+  if(e.target&&e.target.id==='bk-q'&&e.key==='Enter'){e.preventDefault();IN.bkQ(e.target);}
+});
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'){if(TM.running){wlOn();tmTick();}if(T&&!T.done)ttTick();}
+  else if(store.db&&store.dirty.size){clearTimeout(store.timer);flush();}
+});
+
+/* ---------- boot ---------- */
+lsLoad();aiLoad();matLoad();
+{const h=location.hash.slice(1);if(VIEWS.indexOf(h)>=0)view=h;}
+render();
+SAMPLE=makeProvider();sampleReady=true;
+try{
+  if(window.claude&&window.claude.use){
+    window.claude.use('sample').then(sm=>{
+      if(!sm)return;
+      CLAUDE=sm;PROV.claude={name:'Claude (built in)',model:'',hint:'Uses your own Claude account'};
+      if(!AI.chosen||AI.pref==='claude')AI.provider='claude';
+      softRender();
+    }).catch(()=>{});
+  }
+}catch(e){}
+bootCloud();
+})();
+</script>
+</body>
+</html>
