@@ -860,9 +860,9 @@ function finishTest(auto){
 /* ---------- AI providers: the browser calls the provider directly with the student's own key ---------- */
 const PROV={
   gemini:{name:'Google Gemini',model:'gemini-4-hydrogen',hint:'Free key from aistudio.google.com/apikey'},
-  groq:{name:'Groq',model:'llama-3.3-70b-versatile',hint:'Free key from console.groq.com/keys'},
-  openrouter:{name:'OpenRouter',model:'openrouter/free',hint:'Key from openrouter.ai/keys. Models whose name ends in :free cost nothing'},
-  openai:{name:'OpenAI (ChatGPT)',model:'gpt-4o-mini',hint:'Paid key from platform.openai.com/api-keys'}
+  groq:{name:'Groq',model:'llama-3.3-70b-versatile',hint:'Free, no card needed: console.groq.com/keys'},
+  openrouter:{name:'OpenRouter',model:'openrouter/free',hint:'Free key from openrouter.ai/keys. Models ending in :free cost nothing (about 50 requests a day)'},
+  openai:{name:'OpenAI (ChatGPT)',model:'gpt-4o-mini',hint:'Paid only, there is no free API: platform.openai.com/api-keys'}
 };
 const AIK='tnpsc-ai-v1';
 const AI={provider:'gemini',keys:{},models:{},vlang:'ta-IN',speak:false,chosen:false,pref:''};
@@ -870,7 +870,7 @@ function aiLoad(){try{const j=JSON.parse(localStorage.getItem(AIK)||'null');if(j
 function aiSave(){try{localStorage.setItem(AIK,JSON.stringify(AI));}catch(e){}}
 const aiKey=()=>(AI.keys[AI.provider]||'').trim();
 const aiReady=()=>(AI.provider==='claude'&&!!CLAUDE)||!!aiKey();
-const GEM_FALLBACK=['gemini-4-hydrogen','gemini-3.8-flash','gemini-2.5-flash-lite'];
+const FALLBACK={gemini:['gemini-4-hydrogen','gemini-3.8-flash','gemini-2.5-flash-lite'],groq:['llama-3.3-70b-versatile','openai/gpt-oss-120b','llama-3.1-8b-instant'],openrouter:['openrouter/free','openai/gpt-oss-120b:free','meta-llama/llama-3.3-70b-instruct:free'],openai:['gpt-4o-mini','gpt-4.1-mini']};
 const aiModel=()=>((AI.models[AI.provider]||'').trim().replace(/^models\//,'').replace(/\s+/g,'-'))||PROV[AI.provider].model;
 
 function parseLoose(t){
@@ -903,10 +903,10 @@ async function aiCall(input,opts){
     body={model:model,messages:turns};
     if(p==='openai')body.max_completion_tokens=4096;else{body.max_tokens=4096;body.temperature=0.3;}
   }
-  const tries=p==='gemini'?[model].concat(GEM_FALLBACK.filter(x=>x!==model)):[model];
+  const tries=[model].concat((FALLBACK[p]||[]).filter(x=>x!==model));
   let res,j=null;
   for(let ti=0;ti<tries.length;ti++){
-    if(p==='gemini')url='https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(tries[ti])+':generateContent';
+    if(p==='gemini')url='https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(tries[ti])+':generateContent';else body.model=tries[ti];
     try{res=await fetch(url,{method:'POST',headers:headers,body:JSON.stringify(body),signal:signal});}
     catch(e){
       if((signal&&signal.aborted)||(e&&e.name==='AbortError'))throw {code:'cancelled',message:'Cancelled'};
@@ -916,7 +916,7 @@ async function aiCall(input,opts){
     try{j=await res.json();}catch(e){}
     if(res.ok)break;
     const m0=String((j&&j.error&&(j.error.message||j.error))||'');
-    if(!(p==='gemini'&&ti<tries.length-1&&/no longer available|not found|not supported|unexpected model|deprecated/i.test(m0)))break;
+    if(!(ti<tries.length-1&&res.status!==401&&res.status!==403&&([404,413,429,500,502,503,504].indexOf(res.status)>=0||/no longer available|not found|not supported|unexpected model|deprecated|decommissioned|high demand|overloaded|unavailable|too large|does not exist/i.test(m0))))break;
   }
   if(!res.ok){
     const em=j&&j.error;
